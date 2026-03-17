@@ -1,8 +1,81 @@
 @import "tailwindcss";
 
+* {
+  font-family: var(--font-poppins), sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ORANGE */
+  --orange-light: #fef3e6;
+  --orange-light-hover: #fdedd9;
+  --orange-light-active: #fbdab0;
+  --orange-normal: #f28800;
+  --orange-normal-hover: #da7a00;
+  --orange-normal-active: #c26d00;
+  --orange-dark: #b66600;
+  --orange-dark-hover: #915200;
+  --orange-dark-active: #6d3d00;
+  --orange-darker: #553000;
+
+  /* BLUE */
+  --blue-light: #eef1fa;
+  --blue-light-hover: #e5e9f8;
+  --blue-light-active: #c9d2f0;
+  --blue-normal: #506fce;
+  --blue-normal-hover: #4864b9;
+  --blue-normal-active: #4059a5;
+  --blue-dark: #3c539b;
+  --blue-dark-hover: #30437c;
+  --blue-dark-active: #24325d;
+  --blue-darker: #1c2748;
+
+  /* GREEN */
+  --green-light: #f0f7ef;
+  --green-light-hover: #e8f3e6;
+  --green-light-active: #d0e6cc;
+  --green-normal: #67ad5b;
+  --green-normal-hover: #5d9c52;
+  --green-normal-active: #528a49;
+  --green-dark: #4d8244;
+  --green-dark-hover: #3e6837;
+  --green-dark-active: #2e4e29;
+  --green-darker: #243d20;
+
+  /* RED */
+  --red-light: #fbeceb;
+  --red-light-hover: #f8e2e0;
+  --red-light-active: #f1c3bf;
+  --red-normal: #d33c32;
+  --red-normal-hover: #be362d;
+  --red-normal-active: #a93028;
+  --red-dark: #9e2d26;
+  --red-dark-hover: #7f241e;
+  --red-dark-active: #5f1b16;
+  --red-darker: #4a1512;
+
+  /* BLACK */
+  --black-light: #e6e6e6;
+  --black-light-hover: #d9d9d9;
+  --black-light-active: #b0b0b0;
+  --black-normal: #000000;
+  --black-normal-hover: #000000;
+  --black-normal-active: #000000;
+  --black-dark: #000000;
+  --black-dark-hover: #000000;
+  --black-dark-active: #000000;
+  --black-darker: #000000;
+
+  /* WHITE */
+  --white-light: #ffffff;
+  --white-light-hover: #ffffff;
+  --white-light-active: #ffffff;
+  --white-normal: #ffffff;
+  --white-normal-hover: #e6e6e6;
+  --white-normal-active: #cccccc;
+  --white-dark: #bfbfbf;
+  --white-dark-hover: #999999;
+  --white-dark-active: #737373;
+  --white-darker: #595959;
 }
 
 @theme inline {
