@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Button from "@/components/ui/button";
 
 export default function LoginMandorPage() {
@@ -11,23 +11,36 @@ export default function LoginMandorPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
-    // TODO: sambungkan ke BE
-    // const res = await fetch("http://localhost:3001/api/auth/login", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ email, password }),
-    // });
-    // const data = await res.json();
-    // localStorage.setItem("token", data.token);
-    // localStorage.setItem("role", "mandor");
-    // router.push("/dashboard/mandor/projects");
+    try {
+      const response = await fetch("http://localhost:3001/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    setLoading(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Login gagal.");
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", "mandor");
+      router.push("/dashboard/mandor/projects");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Terjadi kesalahan.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogle = () => {
@@ -39,23 +52,13 @@ export default function LoginMandorPage() {
       {/* ── Kolom Kiri — Form ── */}
       <div className="flex flex-col justify-center w-full lg:w-1/2 px-8 md:px-16 xl:px-24 py-12 bg-white">
         {/* Judul */}
-        <h1
-          className="font-semibold mb-3"
-          style={{ fontSize: "40px", lineHeight: "48px" }}
-        >
-          <span style={{ color: "var(--blue-dark)" }}>Masuk ke </span>
-          <span style={{ color: "var(--orange-normal)" }}>MandorIn</span>
+        <h1 className="font-semibold mb-3 text-[2.5rem] leading-[3rem]">
+          <span className="text-[var(--blue-dark)]">Masuk ke </span>
+          <span className="text-[var(--orange-normal)]">MandorIn</span>
         </h1>
 
         {/* Subjudul */}
-        <p
-          className="mb-8 text-center"
-          style={{
-            fontSize: "14px",
-            lineHeight: "20px",
-            color: "var(--text-secondary)",
-          }}
-        >
+        <p className="mb-8 text-center text-[0.875rem] leading-[1.25rem] text-[var(--text-secondary)]">
           Untuk memberikan layanan yang lebih baik, kami
           <br />
           menganjurkan anda untuk mendaftar akun.
@@ -64,15 +67,7 @@ export default function LoginMandorPage() {
         {/* Tombol Google */}
         <button
           onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-3 border rounded-lg py-3 mb-6 transition-colors hover:bg-gray-50"
-          style={{
-            borderColor: "var(--black-light)",
-            fontSize: "16px",
-            lineHeight: "24px",
-            fontWeight: 600,
-            color: "var(--text-black)",
-            height: "52px",
-          }}
+          className="w-full flex items-center justify-center gap-3 border border-[var(--black-light)] rounded-lg py-3 mb-6 transition-colors hover:bg-gray-50 text-[1rem] leading-[1.5rem] h-[3.25rem] font-semibold text-[var(--text-black)]"
         >
           {/* Google Icon SVG */}
           <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
@@ -98,17 +93,11 @@ export default function LoginMandorPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 mb-6">
-          <div
-            className="flex-1 h-px"
-            style={{ backgroundColor: "var(--black-light)" }}
-          />
-          <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+          <div className="flex-1 h-px bg-[var(--black-light)]" />
+          <span className="text-[0.875rem] text-[var(--text-muted)]">
             Masuk dengan Email
           </span>
-          <div
-            className="flex-1 h-px"
-            style={{ backgroundColor: "var(--black-light)" }}
-          />
+          <div className="flex-1 h-px bg-[var(--black-light)]" />
         </div>
 
         {/* Form */}
@@ -117,12 +106,7 @@ export default function LoginMandorPage() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="email"
-              style={{
-                fontSize: "14px",
-                lineHeight: "20px",
-                fontWeight: 500,
-                color: "var(--text-black)",
-              }}
+              className="text-[0.875rem] leading-[1.25rem] font-medium text-[var(--text-black)]"
             >
               Email Pengguna
             </label>
@@ -132,13 +116,7 @@ export default function LoginMandorPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-lg border px-4 outline-none transition-colors focus:border-[var(--orange-normal)]"
-              style={{
-                height: "52px",
-                borderColor: "var(--black-light)",
-                fontSize: "14px",
-                color: "var(--text-black)",
-              }}
+              className="w-full rounded-lg border border-[var(--black-light)] px-4 outline-none transition-colors h-[3.25rem] text-[0.875rem] text-[var(--text-black)] focus:border-[var(--orange-normal)]"
             />
           </div>
 
@@ -146,12 +124,7 @@ export default function LoginMandorPage() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="password"
-              style={{
-                fontSize: "14px",
-                lineHeight: "20px",
-                fontWeight: 500,
-                color: "var(--text-black)",
-              }}
+              className="text-[0.875rem] leading-[1.25rem] font-medium text-[var(--text-black)]"
             >
               Kata Sandi
             </label>
@@ -161,13 +134,7 @@ export default function LoginMandorPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border px-4 outline-none transition-colors focus:border-[var(--orange-normal)]"
-              style={{
-                height: "52px",
-                borderColor: "var(--black-light)",
-                fontSize: "14px",
-                color: "var(--text-black)",
-              }}
+              className="w-full rounded-lg border border-[var(--black-light)] px-4 outline-none transition-colors h-[3.25rem] text-[0.875rem] text-[var(--text-black)] focus:border-[var(--orange-normal)]"
             />
           </div>
 
@@ -175,8 +142,7 @@ export default function LoginMandorPage() {
           <div className="flex justify-end">
             <Link
               href="#"
-              style={{ fontSize: "14px", color: "var(--text-secondary)" }}
-              className="hover:underline"
+              className="hover:underline text-[0.875rem] text-[var(--text-secondary)]"
             >
               Lupa Kata Sandi ?
             </Link>
@@ -192,18 +158,20 @@ export default function LoginMandorPage() {
           >
             {loading ? "Memuat..." : "Masuk"}
           </Button>
+
+          {errorMessage ? (
+            <p className="text-center text-sm text-[var(--red-normal)]">
+              {errorMessage}
+            </p>
+          ) : null}
         </form>
 
         {/* Link Daftar */}
-        <p
-          className="text-center mt-6"
-          style={{ fontSize: "14px", color: "var(--text-secondary)" }}
-        >
+        <p className="text-center mt-6 text-[0.875rem] text-[var(--text-secondary)]">
           Tidak Punya Akun ?{" "}
           <Link
             href="/register/mandor"
-            className="font-semibold hover:underline"
-            style={{ color: "var(--text-black)" }}
+            className="font-semibold hover:underline text-[var(--text-black)]"
           >
             Daftar di sini
           </Link>
@@ -213,7 +181,7 @@ export default function LoginMandorPage() {
       {/* ── Kolom Kanan — Foto ── */}
       <div className="hidden lg:block relative w-1/2">
         <Image
-          src="/images/login.png"
+          src="/images/auth/login/login-illustration.png"
           alt="Mandor bekerja"
           fill
           className="object-cover"
