@@ -31,7 +31,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="mb-8">
           <Image
-            src="/images/branding/logo/mandorin-logo.png"
+            src="/images/logo-mandorin.svg"
             alt="MandorIn"
             width={220}
             height={220}
