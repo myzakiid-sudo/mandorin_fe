@@ -2,19 +2,19 @@ import Image from "next/image";
 
 const langkahMandor = [
   {
+    judul: "Cari & Pilih Mandor",
+    deskripsi:
+      "Jelajahi ribuan profil mandor profesional dengan portofolio yang sudah terverifikasi di wilayah Anda.",
+  },
+  {
     judul: "Terima & Atur Proyek",
     deskripsi:
       "Dapatkan permintaan konsultasi dari calon klien dan kelola detail kesepakatan kerja secara terorganisir dalam satu aplikasi.",
   },
   {
-    judul: "Konsultasi & Kontrak",
+    judul: "Kirim Laporan Harian",
     deskripsi:
-      "Diskusikan rencana anggaran biaya (RAB) dan jadwal pengerjaan secara transparan melalui sistem kontrak digital yang aman.",
-  },
-  {
-    judul: "Pantau Progres Harian",
-    deskripsi:
-      "Terima laporan perkembangan proyek langsung lengkap dengan bukti foto pengerjaan setiap harinya.",
+      "Bagikan progres pengerjaan harian kepada klien dengan mudah melalui fitur unggah foto lapangan untuk menjaga kepercayaan.",
   },
 ];
 

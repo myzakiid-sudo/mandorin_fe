@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 const navItems = [
   { label: "Beranda", href: "/beranda" },
@@ -15,6 +15,14 @@ const navItems = [
 export default function PublicNavbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  const token = isHydrated ? localStorage.getItem("token") : null;
+  const isLoggedIn = Boolean(token);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--black-light)] bg-white/95 backdrop-blur">
@@ -55,12 +63,21 @@ export default function PublicNavbar() {
         </ul>
 
         <div className="flex items-center gap-2 md:gap-3">
-          <Link
-            href="/login"
-            className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-4 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
-          >
-            Masuk
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/login"
+              className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-4 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
+            >
+              Profil
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-4 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
+            >
+              Masuk
+            </Link>
+          )}
 
           <button
             type="button"
