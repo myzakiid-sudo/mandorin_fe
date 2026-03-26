@@ -4,6 +4,8 @@ export type ContractorSummary = {
   image: string;
   specialty: string;
   projects: string;
+  projectCount: number;
+  tier: "Gold" | "Silver" | "Bronze";
   rating: number;
   isReady: boolean;
 };
