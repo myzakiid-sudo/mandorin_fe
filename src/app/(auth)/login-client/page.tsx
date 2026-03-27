@@ -25,12 +25,15 @@ const clearAuthState = () => {
   localStorage.removeItem("role");
   document.cookie =
     "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
+  document.cookie =
+    "role=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
 };
 
 const saveAuthState = (accessToken: string) => {
   localStorage.setItem("token", accessToken);
   localStorage.setItem("role", "client");
   document.cookie = `token=${encodeURIComponent(accessToken)}; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
+  document.cookie = `role=client; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
 };
 
 const getLoginErrorMessage = (

@@ -197,4 +197,5 @@ function saveAuthState(accessToken: string) {
   localStorage.setItem("token", accessToken);
   localStorage.setItem("role", "client");
   document.cookie = `token=${encodeURIComponent(accessToken)}; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
+  document.cookie = `role=client; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
 }

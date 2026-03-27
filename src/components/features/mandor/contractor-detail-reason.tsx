@@ -2,16 +2,21 @@
 
 import { useRef, useState } from "react";
 
-import type { ContractorDetail } from "./types";
+import type { ContractorDetail, ViewerRole } from "./types";
+import UploadProjectModal from "./upload-project-modal";
 
 type ContractorDetailReasonProps = {
   contractor: ContractorDetail;
+  viewerRole: ViewerRole;
 };
 
 export default function ContractorDetailReason({
   contractor,
+  viewerRole,
 }: ContractorDetailReasonProps) {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+
   const bookingSectionRef = useRef<HTMLElement | null>(null);
 
   const handleOpenBooking = () => {
@@ -34,6 +39,14 @@ export default function ContractorDetailReason({
     });
   };
 
+  const handleOpenUpload = () => {
+    setIsUploadOpen(true);
+  };
+
+  const handleCloseUpload = () => {
+    setIsUploadOpen(false);
+  };
+
   return (
     <>
       <section className="mx-auto w-full max-w-[90rem] px-5 py-12 md:px-10 md:py-16 xl:px-[6.25rem]">
@@ -44,17 +57,45 @@ export default function ContractorDetailReason({
           <p className="mt-5 max-w-[70rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
             {contractor.reason}
           </p>
-          <button
-            type="button"
-            onClick={handleOpenBooking}
-            className="mt-8 inline-flex h-12 min-w-[14rem] items-center justify-center rounded-lg bg-[var(--orange-normal)] px-8 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
-          >
-            Buat Janji Temu
-          </button>
+
+          {viewerRole === "client" ? (
+            <button
+              type="button"
+              onClick={handleOpenBooking}
+              className="mt-8 inline-flex h-12 min-w-[14rem] items-center justify-center rounded-lg bg-[var(--orange-normal)] px-8 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+            >
+              Buat Janji Temu
+            </button>
+          ) : (
+            <div className="mt-8 flex md:justify-end">
+              <button
+                type="button"
+                onClick={handleOpenUpload}
+                className="inline-flex h-12 min-w-[14rem] items-center justify-center gap-2 rounded-lg bg-[var(--orange-normal)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+              >
+                Upload new project
+                <svg
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 4v11m0-11-4 4m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      {isBookingOpen ? (
+      {viewerRole === "client" && isBookingOpen ? (
         <section
           id="booking-jadwal-mandor"
           ref={bookingSectionRef}
@@ -176,6 +217,14 @@ export default function ContractorDetailReason({
             </form>
           </div>
         </section>
+      ) : null}
+
+      {viewerRole === "mandor" ? (
+        <UploadProjectModal
+          contractor={contractor}
+          isOpen={isUploadOpen}
+          onClose={handleCloseUpload}
+        />
       ) : null}
     </>
   );

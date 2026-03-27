@@ -1,7 +1,12 @@
-export default function BookingPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-400">🚧 Booking — coming soon</p>
-    </div>
+import { redirect } from "next/navigation";
+
+export default async function BookingPage({
+  params,
+}: {
+  params: Promise<{ mandorId: string }>;
+}) {
+  const { mandorId } = await params;
+  redirect(
+    `/dashboard/client/pesanan?mandorId=${encodeURIComponent(mandorId)}`,
   );
 }

@@ -42,3 +42,5 @@ export type ContractorDetail = {
   portfolio: PortfolioItem[];
   testimonials: TestimonialItem[];
 };
+
+export type ViewerRole = "client" | "mandor";

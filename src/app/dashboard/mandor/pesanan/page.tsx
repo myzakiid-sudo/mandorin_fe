@@ -7,65 +7,53 @@ import { useMemo, useState } from "react";
 import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 
-type ProjectTab = "berlangsung" | "selesai";
+type OrderTab = "berlangsung" | "selesai";
 
-type ClientProject = {
+type MandorOrder = {
   id: number;
-  mandorName: string;
+  clientName: string;
   projectName: string;
   date: string;
-  budget: string;
   image: string;
 };
 
-const ongoingProjects: ClientProject[] = [
+const ongoingOrders: MandorOrder[] = [
   {
     id: 1,
-    mandorName: "Rio Prasetya",
-    projectName: "Pembangunan Rumah Tinggal",
+    clientName: "Anak Agung Hendrico",
+    projectName: "Renovasi Dapur",
     date: "23/10/26",
-    budget: "Rp.300,000,000",
-    image: "/images/mandor/mandor-rio prasetyaa.png",
+    image: "/images/beranda/testimoni-cowo-2.png",
   },
   {
     id: 2,
-    mandorName: "Bayu Permana",
+    clientName: "Sri Rahayu",
     projectName: "Renovasi Kamar Mandi",
     date: "16/6/26",
-    budget: "Rp.25,000,000",
-    image: "/images/mandor/mandor-bambang.png",
-  },
-  {
-    id: 3,
-    mandorName: "Guntur Wijaya",
-    projectName: "Pemasangan Kanopi Baja Ringan",
-    date: "9/3/26",
-    budget: "Rp.3,000,000",
-    image: "/images/mandor/mandor-aris setiawan.png",
+    image: "/images/beranda/tertimoni-cewe.png",
   },
 ];
 
-const completedProjects: ClientProject[] = [
+const completedOrders: MandorOrder[] = [
   {
     id: 3,
-    mandorName: "Guntur Wijaya",
-    projectName: "Pemasangan Kanopi Baja Ringan",
-    date: "9/3/26",
-    budget: "Rp.3,000,000",
-    image: "/images/mandor/mandor-aris setiawan.png",
+    clientName: "Budi Santoso",
+    projectName: "Renovasi Kamar",
+    date: "10/6/26",
+    image: "/images/beranda/testimoni-cowo-1.png",
   },
 ];
 
-const tabLabel: Record<ProjectTab, string> = {
+const tabLabel: Record<OrderTab, string> = {
   berlangsung: "Berlangsung",
   selesai: "Selesai",
 };
 
-export default function ClientProjectsPage() {
-  const [activeTab, setActiveTab] = useState<ProjectTab>("berlangsung");
+export default function MandorPesananPage() {
+  const [activeTab, setActiveTab] = useState<OrderTab>("berlangsung");
 
-  const projectList = useMemo(
-    () => (activeTab === "berlangsung" ? ongoingProjects : completedProjects),
+  const orderList = useMemo(
+    () => (activeTab === "berlangsung" ? ongoingOrders : completedOrders),
     [activeTab],
   );
 
@@ -76,11 +64,11 @@ export default function ClientProjectsPage() {
       <main className="mx-auto w-full max-w-[90rem] px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
         <section className="rounded-[0.75rem] bg-[var(--white-normal)] p-[1rem] md:p-[1.5rem]">
           <h1 className="text-[1.75rem] font-semibold leading-[2.5rem] text-[var(--text-black)]">
-            Riwayat Proyek
+            Riwayat Pesanan
           </h1>
 
           <div className="mt-[0.75rem] flex items-center gap-[0.75rem]">
-            {(Object.keys(tabLabel) as ProjectTab[]).map((tabKey) => {
+            {(Object.keys(tabLabel) as OrderTab[]).map((tabKey) => {
               const isActive = activeTab === tabKey;
 
               return (
@@ -102,7 +90,7 @@ export default function ClientProjectsPage() {
 
           <div className="mt-[1rem] overflow-hidden rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)]">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[54rem] border-collapse">
+              <table className="w-full min-w-[42rem] border-collapse">
                 <thead className="bg-[var(--orange-normal)] text-[var(--text-white)]">
                   <tr>
                     <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
@@ -111,9 +99,6 @@ export default function ClientProjectsPage() {
                     <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
                       Tanggal
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
-                      Anggaran
-                    </th>
                     <th className="px-[1rem] py-[0.5rem] text-right text-[1.125rem] font-semibold leading-[1.75rem]">
                       Lihat Detail
                     </th>
@@ -121,16 +106,16 @@ export default function ClientProjectsPage() {
                 </thead>
 
                 <tbody>
-                  {projectList.map((project) => (
+                  {orderList.map((order) => (
                     <tr
-                      key={`${activeTab}-${project.id}`}
+                      key={`${activeTab}-${order.id}`}
                       className="border-t border-[var(--black-light)]"
                     >
                       <td className="px-[1rem] py-[0.5rem]">
                         <div className="flex items-center gap-[0.75rem]">
                           <Image
-                            src={project.image}
-                            alt={project.mandorName}
+                            src={order.image}
+                            alt={order.clientName}
                             width={44}
                             height={44}
                             className="h-[2.75rem] w-[2.75rem] rounded-full object-cover"
@@ -138,26 +123,22 @@ export default function ClientProjectsPage() {
 
                           <div>
                             <p className="text-[1.125rem] font-medium leading-[1.75rem] text-[var(--text-black)]">
-                              {project.mandorName}
+                              {order.clientName}
                             </p>
                             <p className="text-[0.875rem] leading-[1.25rem] text-[var(--text-muted)]">
-                              {project.projectName}
+                              {order.projectName}
                             </p>
                           </div>
                         </div>
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
-                        {project.date}
-                      </td>
-
-                      <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
-                        {project.budget}
+                        {order.date}
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-right">
                         <Link
-                          href={`/dashboard/client/projects/${project.id}`}
+                          href={`/dashboard/mandor/pesanan/${order.id}`}
                           className="inline-flex min-w-[5.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
                         >
                           Detail

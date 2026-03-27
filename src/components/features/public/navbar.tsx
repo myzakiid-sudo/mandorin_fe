@@ -5,11 +5,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 
-const navItems = [
+type UserRole = "client" | "mandor";
+
+const guestNavItems = [
   { label: "Beranda", href: "/beranda" },
   { label: "Mandor", href: "/mandor" },
-  { label: "Projek", href: "/explore" },
-  { label: "Pesanan", href: "/login-client" },
+];
+
+const clientNavItems = [
+  { label: "Beranda", href: "/beranda" },
+  { label: "Mandor", href: "/mandor" },
+  { label: "Projek", href: "/dashboard/client/projects" },
+  { label: "Pesanan", href: "/dashboard/client/pesanan" },
+];
+
+const mandorNavItems = [
+  { label: "Beranda", href: "/beranda" },
+  { label: "Mandor", href: "/mandor" },
+  { label: "Projek", href: "/dashboard/mandor/projects" },
+  { label: "Pesanan", href: "/dashboard/mandor/pesanan" },
 ];
 
 export default function PublicNavbar() {
@@ -22,7 +36,34 @@ export default function PublicNavbar() {
   );
 
   const token = isHydrated ? localStorage.getItem("token") : null;
+  const role = isHydrated ? localStorage.getItem("role") : null;
   const isLoggedIn = Boolean(token);
+  const userRole: UserRole | null =
+    role === "client" || role === "mandor" ? role : null;
+  const navItems =
+    isLoggedIn && userRole
+      ? userRole === "client"
+        ? clientNavItems
+        : mandorNavItems
+      : guestNavItems;
+  const profileHref =
+    userRole === "client"
+      ? "/dashboard/client/profile"
+      : userRole === "mandor"
+        ? "/dashboard/mandor/profile"
+        : "/login";
+
+  const isNavItemActive = (href: string) => {
+    if (href === "/mandor") {
+      return pathname === "/mandor" || pathname.startsWith("/mandor/");
+    }
+
+    if (href.startsWith("/dashboard/")) {
+      return pathname === href || pathname.startsWith(`${href}/`);
+    }
+
+    return pathname === href;
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--black-light)] bg-white/95 backdrop-blur">
@@ -43,7 +84,7 @@ export default function PublicNavbar() {
 
         <ul className="hidden items-center gap-10 lg:flex">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = isNavItemActive(item.href);
 
             return (
               <li key={item.href}>
@@ -65,7 +106,7 @@ export default function PublicNavbar() {
         <div className="flex items-center gap-2 md:gap-3">
           {isLoggedIn ? (
             <Link
-              href="/login"
+              href={profileHref}
               className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-4 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
             >
               Profil
@@ -107,7 +148,7 @@ export default function PublicNavbar() {
         <div className="border-t border-[var(--black-light)] bg-white lg:hidden">
           <ul className="mx-auto flex w-full max-w-[90rem] flex-col px-5 py-3 md:px-10">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = isNavItemActive(item.href);
 
               return (
                 <li key={item.href}>

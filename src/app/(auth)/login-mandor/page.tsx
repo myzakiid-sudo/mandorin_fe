@@ -6,6 +6,24 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Button from "@/components/ui/button";
 
+const TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+
+const clearAuthState = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  document.cookie =
+    "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
+  document.cookie =
+    "role=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
+};
+
+const saveAuthState = (accessToken: string) => {
+  localStorage.setItem("token", accessToken);
+  localStorage.setItem("role", "mandor");
+  document.cookie = `token=${encodeURIComponent(accessToken)}; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
+  document.cookie = `role=mandor; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
+};
+
 export default function LoginMandorPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -19,6 +37,8 @@ export default function LoginMandorPage() {
     setErrorMessage("");
 
     try {
+      clearAuthState();
+
       const response = await fetch("http://localhost:3001/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -31,10 +51,15 @@ export default function LoginMandorPage() {
         throw new Error(data?.message || "Login gagal.");
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", "mandor");
+      const accessToken = data?.token;
+      if (!accessToken) {
+        throw new Error("Token login mandor tidak ditemukan.");
+      }
+
+      saveAuthState(accessToken);
       router.push("/dashboard/mandor/projects");
     } catch (error) {
+      clearAuthState();
       setErrorMessage(
         error instanceof Error ? error.message : "Terjadi kesalahan.",
       );
