@@ -61,12 +61,13 @@ export default function HeroSection() {
 
             <div className="relative z-10 w-full max-w-[540px]">
               <Image
-                src="/images/beranda/hero/beranda-hero.png"
+                src="/images/beranda/beranda-hero.png"
                 alt="Tim mandor profesional"
                 width={540}
                 height={480}
+                sizes="(max-width: 1024px) 100vw, 540px"
                 priority
-                className="relative z-10 object-contain"
+                className="relative z-10 h-auto w-full object-contain"
               />
             </div>
           </div>

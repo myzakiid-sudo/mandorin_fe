@@ -9,6 +9,24 @@ type ContractorDetailTestimonialsProps = {
 export default function ContractorDetailTestimonials({
   contractor,
 }: ContractorDetailTestimonialsProps) {
+  if (!contractor.testimonials.length) {
+    return (
+      <section className="bg-[#ececf3]">
+        <div className="mx-auto w-full max-w-[90rem] px-5 py-12 md:px-10 md:py-16 xl:px-[6.25rem]">
+          <h2 className="text-center text-3xl font-semibold leading-tight text-[var(--text-black)] md:text-4xl">
+            Testimoni Pelanggan
+          </h2>
+
+          <div className="mt-8 rounded-[1.25rem] border border-[var(--black-light)] bg-white px-5 py-6 text-center shadow-[0_0.5rem_1.5rem_rgba(0,0,0,0.06)]">
+            <p className="text-sm text-[var(--text-secondary)] md:text-base">
+              Belum ada testimoni yang tersedia untuk mandor ini.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="bg-[#ececf3]">
       <div className="mx-auto w-full max-w-[90rem] px-5 py-12 md:px-10 md:py-16 xl:px-[6.25rem]">
@@ -24,7 +42,12 @@ export default function ContractorDetailTestimonials({
                   {testimonial.quote}
                 </p>
                 <p className="mt-3 text-sm font-semibold leading-6 text-[var(--orange-normal)] flex justify-center">
-                  <Image src="/images/icons/icon-5bintang.svg" alt="Rating 5 Bintang" width={90} height={16} />
+                  <Image
+                    src="/images/icons/icon-5bintang.svg"
+                    alt="Rating 5 Bintang"
+                    width={90}
+                    height={16}
+                  />
                 </p>
               </div>
 

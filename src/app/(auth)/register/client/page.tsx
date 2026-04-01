@@ -1,23 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import Button from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { extractAuthSession } from "@/lib/auth-session";
 
 const REGISTER_ENDPOINT =
   "https://be-internship.bccdev.id/dzaki/api/auth/register/clients";
-const TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
 type RegisterApiResponse = {
   success?: boolean;
   message?: string;
-  data?: {
-    accessToken?: string;
-    data?: {
-      accessToken?: string;
-    };
-  };
+  data?: Record<string, unknown>;
 };
 
 const formFields = [
@@ -35,10 +30,20 @@ const formFields = [
 
 export default function RegisterClientPage() {
   const router = useRouter();
+  const { setSession } = useAuth();
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   const todayDate = now.toISOString().split("T")[0];
   const [isFormComplete, setIsFormComplete] = useState(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
 
   const updateFormValidity = (formElement: HTMLFormElement) => {
     const formData = new FormData(formElement);
@@ -52,6 +57,24 @@ export default function RegisterClientPage() {
     const hasAvatar = avatar instanceof File && avatar.size > 0;
 
     setIsFormComplete(allTextFieldsFilled && hasAvatar);
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setAvatarPreviewUrl("");
+      return;
+    }
+
+    const nextUrl = URL.createObjectURL(file);
+    setAvatarPreviewUrl((prev) => {
+      if (prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+
+      return nextUrl;
+    });
   };
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
@@ -74,6 +97,7 @@ export default function RegisterClientPage() {
     try {
       const response = await fetch(REGISTER_ENDPOINT, {
         method: "POST",
+        credentials: "include",
         body: formData,
       });
 
@@ -89,14 +113,13 @@ export default function RegisterClientPage() {
         return;
       }
 
-      const accessToken =
-        data.data?.accessToken || data.data?.data?.accessToken;
-      if (!accessToken) {
+      const authSession = extractAuthSession(data, "client");
+      if (!authSession) {
         alert("Registrasi berhasil, tetapi token tidak ditemukan.");
         return;
       }
 
-      saveAuthState(accessToken);
+      setSession(authSession);
 
       alert("Registrasi Berhasil!");
       router.push("/beranda");
@@ -115,7 +138,7 @@ export default function RegisterClientPage() {
             alt="MandorIn"
             width={44}
             height={44}
-            className="h-[2.75rem] w-[2.75rem] object-contain"
+            className="object-contain"
             priority
           />
           <span className="text-[1.5rem] font-semibold text-[var(--orange-normal)]">
@@ -135,17 +158,27 @@ export default function RegisterClientPage() {
           >
             <label
               htmlFor="avatar"
-              className="mx-auto flex h-[6.5rem] w-[6.5rem] cursor-pointer items-center justify-center rounded-full bg-[var(--black-light)] transition-opacity hover:opacity-80"
+              className="mx-auto relative flex h-[6.5rem] w-[6.5rem] cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[var(--black-light)] transition-opacity hover:opacity-80"
             >
-              <span className="text-[3rem] leading-none text-[var(--text-black)]">
-                +
-              </span>
+              {avatarPreviewUrl ? (
+                <Image
+                  src={avatarPreviewUrl}
+                  alt="Preview avatar"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <span className="text-[3rem] leading-none text-[var(--text-black)]">
+                  +
+                </span>
+              )}
               <input
                 id="avatar"
                 name="avatar"
                 type="file"
                 accept="image/*"
                 required
+                onChange={handleAvatarChange}
                 className="hidden"
               />
             </label>
@@ -176,26 +209,20 @@ export default function RegisterClientPage() {
               Kebijakan Privasi Mandorin.
             </p>
 
-            <Button
+            <button
               type="submit"
-              variant={isFormComplete ? "primary" : "outline"}
-              size="lg"
-              fullWidth
               disabled={!isFormComplete}
-              className="mx-auto mt-3 md:!w-[14.75rem]"
+              className={`mx-auto mt-3 inline-flex h-[3.25rem] w-full items-center justify-center rounded-lg px-5 text-[1rem] font-semibold transition-colors md:w-[14.75rem] ${
+                isFormComplete
+                  ? "bg-[var(--orange-normal)] text-white hover:bg-[var(--orange-dark)]"
+                  : "border border-[var(--btn-outline-border)] bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)]"
+              }`}
             >
               Kirim
-            </Button>
+            </button>
           </form>
         </section>
       </div>
     </main>
   );
-}
-
-function saveAuthState(accessToken: string) {
-  localStorage.setItem("token", accessToken);
-  localStorage.setItem("role", "client");
-  document.cookie = `token=${encodeURIComponent(accessToken)}; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
-  document.cookie = `role=client; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
 }

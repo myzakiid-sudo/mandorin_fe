@@ -1,151 +1,233 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+
 import PublicNavbar from "@/components/features/public/navbar";
 import PublicFooter from "@/components/features/public/footer";
+import { resolveMandorOrderPhase } from "@/lib/mandor-order-flow";
 
-const timelineSteps = [
-  { title: "Persiapan & Fondasi", date: "16-04-2026 07:30:00", status: "completed" },
-  { title: "Struktur Utama & Dinding", date: "1-05-2026 12:30:00", status: "completed" },
-  { title: "Konstruksi Atap", date: "", status: "current" },
-  { title: "Instalasi & MEP", date: "", status: "upcoming" },
-  { title: "Finishing & Interior", date: "15-05-2026 16:30:00", status: "upcoming" },
+type MilestoneStatus = "completed" | "current" | "upcoming";
+
+const milestoneSteps: Array<{
+  id: number;
+  title: string;
+  targetDate: string;
+  status: MilestoneStatus;
+}> = [
+  {
+    id: 1,
+    title: "Persiapan & Fondasi",
+    targetDate: "16-04-2026",
+    status: "completed",
+  },
+  {
+    id: 2,
+    title: "Struktur Utama & Dinding",
+    targetDate: "01-05-2026",
+    status: "completed",
+  },
+  {
+    id: 3,
+    title: "Konstruksi Atap",
+    targetDate: "13-05-2026",
+    status: "current",
+  },
+  {
+    id: 4,
+    title: "Instalasi & MEP",
+    targetDate: "24-05-2026",
+    status: "upcoming",
+  },
+  {
+    id: 5,
+    title: "Finishing & Interior",
+    targetDate: "05-06-2026",
+    status: "upcoming",
+  },
+  {
+    id: 6,
+    title: "Pembersihan Akhir & Serah Terima",
+    targetDate: "10-06-2026",
+    status: "upcoming",
+  },
 ];
 
 const progressReports = [
   {
     id: 1,
     date: "Rabu, 17 Juni 2026",
-    image: "/images/auth/login/login-illustration.png", // placeholder
-    desc: "Proses pengecatan seluruh dinding ruang tamu telah selesai dilakukan dengan total 3 lapis pengecatan untuk hasil warna yang maksimal. Hari ini tim fokus pada pembersihan sisa-sisa percikan cat pada lantai granit dan mulai memasang kembali penutup saklar serta stop kontak.",
+    image: "/images/auth/login/login-illustration.png",
+    desc: "Pengecatan area utama selesai dan tim melanjutkan pembersihan area kerja.",
   },
   {
     id: 2,
     date: "Selasa, 16 Juni 2026",
-    image: "/images/auth/login/login-illustration.png", // placeholder
-    desc: "Hari ini tim fokus pada pembersihan sisa bongkaran dinding dan memulai pemasangan keramik dinding area dapur. Progres pengerjaan berjalan sesuai jadwal dengan total capaian 15% dari keseluruhan tahap renovasi interior. Material tambahan berupa semen instan telah tiba di lokasi.",
-  },
-  {
-    id: 3,
-    date: "Senin, 15 Juni 2026",
-    image: "/images/auth/login/login-illustration.png", // placeholder
-    desc: "Hari ini tim fokus pada distribusi material batu batako ke titik area dinding luar bangunan. Material batako dengan ukuran standar telah tiba di lokasi dalam kondisi baik dan siap digunakan. Pemasangan baris pertama dinding luar sedang berlangsung untuk menentukan kelurusan presisi struktural.",
+    image: "/images/auth/login/login-illustration.png",
+    desc: "Pemasangan keramik dinding dapur berjalan sesuai target harian.",
   },
 ];
 
-export default function DailyProgressPage() {
+const statusBadgeClass: Record<MilestoneStatus, string> = {
+  completed: "bg-[var(--green-normal)] text-white",
+  current: "bg-[var(--orange-normal)] text-white",
+  upcoming: "bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)]",
+};
+
+export default function MandorProjectDetailPage() {
+  const params = useParams<{ id: string }>();
+  const orderId = String(params?.id ?? "");
+  const phase = resolveMandorOrderPhase(orderId, "pending");
+
+  if (phase !== "client_approved") {
+    return (
+      <div className="flex min-h-screen flex-col bg-white">
+        <PublicNavbar />
+
+        <main className="mx-auto flex w-full max-w-[90rem] flex-1 items-center justify-center px-[1rem] py-[2rem] md:px-[2.5rem] xl:px-[6.25rem]">
+          <section className="w-full max-w-[38rem] rounded-[1rem] border border-[var(--black-light)] bg-white p-6 text-center shadow-[0_0.375rem_1.25rem_rgba(0,0,0,0.06)]">
+            <h1 className="text-[1.75rem] font-semibold text-[var(--text-black)]">
+              Proyek Belum Aktif
+            </h1>
+
+            <p className="mt-2 text-[0.938rem] leading-[1.5rem] text-[var(--text-secondary)]">
+              Anda bisa masuk ke halaman proyek setelah klien menyetujui
+              proposal tahapan pengerjaan.
+            </p>
+
+            <div className="mt-5 flex justify-center">
+              <Link
+                href="/dashboard/mandor/pesanan"
+                className="inline-flex h-[2.75rem] min-w-[12rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+              >
+                Kembali ke Pesanan
+              </Link>
+            </div>
+          </section>
+        </main>
+
+        <PublicFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <PublicNavbar />
 
-      <main className="flex-1 w-full mx-auto max-w-[90rem]">
-        {/* Header Profile Section */}
-        <div className="border-b border-[var(--black-light-active)]">
-          <div className="px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2.5rem] xl:px-[6.25rem] flex items-center justify-between">
+      <main className="mx-auto w-full max-w-[90rem] flex-1">
+        <section className="border-b border-[var(--black-light-active)] px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Image
-                src="/images/logo-mandorin.svg" // fallback avatar
-                alt="Rio Prasetya"
+                src="/images/logo-mandorin.svg"
+                alt="Avatar Klien"
                 width={64}
                 height={64}
-                className="rounded-full object-cover w-[4rem] h-[4rem] border border-[var(--black-light)]"
+                className="rounded-full border border-[var(--black-light)] object-cover"
               />
+
               <div>
-                <h2 className="text-[1.25rem] md:text-[1.5rem] font-semibold text-[var(--text-black)]">
-                  Rio Prasetya
-                </h2>
-                <p className="text-[0.875rem] md:text-[1rem] text-[var(--text-secondary)]">
-                  Renovasi Interior & Konstruksi Atap
+                <h1 className="text-[1.375rem] font-semibold text-[var(--text-black)] md:text-[1.625rem]">
+                  Renovasi Interior Dapur Modern
+                </h1>
+                <p className="text-[0.938rem] text-[var(--text-secondary)] md:text-[1rem]">
+                  Klien: Anak Agung Hendrico
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-4 text-[0.938rem] font-semibold text-white">
+                Proyek Berjalan
+              </span>
+
               <Link
                 href="/dashboard/mandor/chat"
-                className="hidden md:inline-flex h-[2.5rem] items-center justify-center rounded-[2rem] bg-[var(--orange-normal)] px-6 text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] shadow-sm"
+                className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
               >
                 Pesan
               </Link>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Timeline Section */}
-        <section className="px-[1rem] py-[2rem] md:px-[2.5rem] md:py-[4rem] xl:px-[6.25rem] flex flex-col items-center">
-          <h1 className="text-[1.5rem] md:text-[2rem] font-bold text-[var(--text-black)] mb-[3rem]">
-            Timeline Utama Pengerjaan
-          </h1>
+        <section className="px-[1rem] py-[2rem] md:px-[2.5rem] md:py-[2.5rem] xl:px-[6.25rem]">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-[1.5rem] font-semibold text-[var(--text-black)] md:text-[1.75rem]">
+              Timeline Utama Pengerjaan
+            </h2>
 
-          <div className="relative w-full max-w-[65rem] flex justify-between items-start mt-[1.5rem]">
-            {/* Horizontal Line Connector */}
-            <div className="absolute top-[2.5rem] left-[5%] right-[5%] h-[4px] bg-[#d9d9d9] -z-10" />
-            <div
-              className="absolute top-[2.5rem] left-[5%] h-[4px] bg-[var(--green-normal)] -z-10"
-              style={{ width: "45%" }} // mockup line progress
-            />
+            <button
+              type="button"
+              className="inline-flex h-[2.625rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.875rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+            >
+              + Tambah Tahapan Utama
+            </button>
+          </div>
 
-            {timelineSteps.map((step, idx) => {
-              const boxStyle =
-                step.status === "completed" || step.status === "current"
-                  ? "border-[var(--orange-normal)] shadow-sm"
-                  : "border-[var(--black-light)] opacity-70";
-              const iconBg =
-                step.status === "completed" || step.status === "current"
-                  ? "bg-[var(--orange-normal)] text-white"
-                  : "bg-[#d9d9d9] text-white";
+          <div className="rounded-[1rem] border border-[var(--black-light)] bg-[var(--white-normal-hover)] p-4 md:p-6">
+            <ol className="relative border-s-2 border-[var(--black-light)] ps-6">
+              {milestoneSteps.map((step) => (
+                <li key={step.id} className="mb-6 last:mb-0">
+                  <span
+                    className={`absolute -start-[0.72rem] mt-1 inline-flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full border-2 border-white ${
+                      step.status === "completed"
+                        ? "bg-[var(--green-normal)]"
+                        : step.status === "current"
+                          ? "bg-[var(--orange-normal)]"
+                          : "bg-[var(--btn-disabled-bg)]"
+                    }`}
+                  />
 
-              return (
-                <div key={idx} className="relative flex flex-col items-center flex-1 max-w-[12rem] px-2 text-center group">
-                  <div className={`absolute -top-[1.25rem] w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${iconBg} shadow-sm border-2 border-white`}>
-                    <Image src="/images/icons/icon-progres-centang.svg" alt="Selesai" width={16} height={16} />
-                  </div>
-                  <div className={`mt-2 w-full h-[6.5rem] bg-white rounded-xl border flex flex-col items-center justify-center p-3 transition-transform ${boxStyle}`}>
-                    <span className="text-[0.875rem] md:text-[0.938rem] font-medium leading-[1.25rem] text-[var(--text-black)] mb-1">
-                      {step.title}
-                    </span>
-                    {step.date && (
-                      <span className="text-[0.65rem] md:text-[0.75rem] text-[var(--text-muted)]">
-                        {step.date}
+                  <div className="rounded-[0.75rem] border border-[var(--black-light)] bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-[1rem] font-semibold text-[var(--text-black)] md:text-[1.125rem]">
+                        Tahapan {step.id}: {step.title}
+                      </p>
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-[0.75rem] font-semibold ${statusBadgeClass[step.status]}`}
+                      >
+                        {step.status === "completed"
+                          ? "Selesai"
+                          : step.status === "current"
+                            ? "Berjalan"
+                            : "Menunggu"}
                       </span>
-                    )}
+                    </div>
+
+                    <p className="mt-2 text-[0.875rem] text-[var(--text-secondary)]">
+                      Target: {step.targetDate}
+                    </p>
                   </div>
-                </div>
-              );
-            })}
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
-        {/* Action Button: Unggah Progres */}
-        <div className="w-full flex justify-end px-[1rem] md:px-[2.5rem] xl:px-[6.25rem] mb-[1.5rem]">
-            <button className="h-[2.75rem] inline-flex items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] text-[var(--orange-normal)] px-6 text-[0.938rem] font-semibold transition-colors hover:bg-[var(--orange-normal)] hover:text-white shadow-sm">
-                + Tambah Progres Harian
+        <section className="px-[1rem] pb-[2rem] md:px-[2.5rem] xl:px-[6.25rem]">
+          <div className="mb-4 flex justify-end">
+            <button className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-6 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-normal)] hover:text-white">
+              + Tambah Progres Harian
             </button>
-        </div>
+          </div>
 
-        {/* Daily Progress Cards Background */}
-        <div className="bg-[#FAF9F5] w-full px-[1rem] py-[3rem] md:px-[2.5rem] xl:px-[6.25rem]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[80rem] mx-auto">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {progressReports.map((report) => (
-              <div
+              <article
                 key={report.id}
-                className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-[var(--black-light-active)] h-fit"
+                className="rounded-[1rem] border border-[var(--black-light-active)] bg-white p-4 shadow-sm"
               >
-                {/* Card Header */}
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-[1rem] font-bold text-[var(--text-black)]">
-                      Rio Prasetya
-                    </h3>
-                    <p className="text-[0.875rem] text-[var(--text-muted)]">
-                      {report.date}
-                    </p>
-                  </div>
-                  <button className="text-[var(--text-black)] p-1 hover:opacity-70">
-                    <Image src="/images/icons/icon-progres-panahlengkung.svg" alt="Bagikan" width={20} height={20} />
-                  </button>
-                </div>
+                <h3 className="text-[1rem] font-semibold text-[var(--text-black)]">
+                  Progres Harian
+                </h3>
+                <p className="text-[0.813rem] text-[var(--text-muted)]">
+                  {report.date}
+                </p>
 
-                {/* Card Image */}
-                <div className="relative w-full h-[10rem] mb-4 bg-gray-200 rounded-xl overflow-hidden">
+                <div className="relative mt-3 h-[10rem] overflow-hidden rounded-lg bg-[#efefef]">
                   <Image
                     src={report.image}
                     alt={report.date}
@@ -154,15 +236,13 @@ export default function DailyProgressPage() {
                   />
                 </div>
 
-                {/* Card Content */}
-                <p className="text-[0.875rem] leading-[1.4rem] text-[var(--text-secondary)] text-justify">
-                  <span className="font-bold text-[var(--text-black)]">Rio Prasetya </span>
+                <p className="mt-3 text-[0.875rem] leading-[1.5rem] text-[var(--text-secondary)]">
                   {report.desc}
                 </p>
-              </div>
+              </article>
             ))}
           </div>
-        </div>
+        </section>
       </main>
 
       <PublicFooter />

@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import React, { FormEvent } from "react";
+import React, { FormEvent, useState } from "react";
 import PublicNavbar from "@/components/features/public/navbar";
 import PublicFooter from "@/components/features/public/footer";
+import { setMandorOrderFlow } from "@/lib/mandor-order-flow";
 
 function InputTarget({
   label,
@@ -41,10 +42,30 @@ function InputTarget({
 export default function TargetTahapanPengerjaanPage() {
   const router = useRouter();
   const params = useParams();
+  const [mainStages, setMainStages] = useState(["", "", ""]);
+
+  const handleStageChange = (index: number, value: string) => {
+    setMainStages((prev) =>
+      prev.map((stage, stageIndex) => (stageIndex === index ? value : stage)),
+    );
+  };
+
+  const handleAddStage = () => {
+    setMainStages((prev) => [...prev, ""]);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    router.push(`/dashboard/mandor/pesanan/${params?.id}/target/success`);
+    const orderId = String(params?.id ?? "");
+
+    if (orderId) {
+      setMandorOrderFlow(orderId, {
+        approved: true,
+        proposalSubmitted: true,
+      });
+    }
+
+    router.push(`/dashboard/mandor/pesanan/${orderId}/target/success`);
   };
 
   return (
@@ -79,11 +100,35 @@ export default function TargetTahapanPengerjaanPage() {
               <h3 className="text-[1.125rem] font-semibold text-[var(--text-black)]">
                 Urutan Tahapan
               </h3>
-              <InputTarget label="Tahapan 1" />
-              <InputTarget label="Tahapan 2" />
-              <InputTarget label="Tahapan 3" />
-              <InputTarget label="Tahapan 4" />
-              <InputTarget label="Tahapan 5" />
+
+              {mainStages.map((stage, index) => (
+                <label
+                  key={`tahapan-${index + 1}`}
+                  className="flex flex-col gap-[0.5rem]"
+                >
+                  <span className="text-[0.938rem] font-medium leading-[1.5rem] text-[var(--text-black)] md:text-[1rem]">
+                    Tahapan {index + 1}
+                  </span>
+                  <input
+                    type="text"
+                    value={stage}
+                    onChange={(event) =>
+                      handleStageChange(index, event.target.value)
+                    }
+                    placeholder="Isi tahapan pengerjaan"
+                    className="h-[2.5rem] rounded-[0.375rem] border border-[var(--black-light-active)] bg-white px-[0.75rem] text-[0.938rem] leading-[1.375rem] text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)] md:h-[2.75rem] md:text-[1rem]"
+                  />
+                </label>
+              ))}
+
+              <button
+                type="button"
+                onClick={handleAddStage}
+                className="inline-flex h-[2.5rem] w-full max-w-[13rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] text-[0.875rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+              >
+                + Tambah Tahapan
+              </button>
+
               <InputTarget label="Syarat Tahapan" />
             </div>
 

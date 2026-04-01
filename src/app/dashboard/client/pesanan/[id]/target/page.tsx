@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { useParams, useRouter } from "next/navigation";
 import PublicNavbar from "@/components/features/public/navbar";
 import PublicFooter from "@/components/features/public/footer";
+import { setMandorOrderFlow } from "@/lib/mandor-order-flow";
 
 function ReadonlyTargetInput({
   label,
@@ -40,6 +42,35 @@ function ReadonlyTargetInput({
 }
 
 export default function ClientTargetPengerjaanPage() {
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+
+  const handleApproveProposal = () => {
+    const orderId = String(params?.id ?? "");
+    if (orderId) {
+      setMandorOrderFlow(orderId, {
+        approved: true,
+        proposalSubmitted: true,
+        clientApproved: true,
+      });
+    }
+
+    router.push("/dashboard/client/projects");
+  };
+
+  const handleRejectProposal = () => {
+    const orderId = String(params?.id ?? "");
+    if (orderId) {
+      setMandorOrderFlow(orderId, {
+        approved: true,
+        proposalSubmitted: false,
+        clientApproved: false,
+      });
+    }
+
+    router.push("/dashboard/client/pesanan");
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f3f3f3]">
       <PublicNavbar />
@@ -51,60 +82,57 @@ export default function ClientTargetPengerjaanPage() {
           </h1>
 
           <div className="mt-[2rem] flex flex-col gap-[1.25rem]">
-            <ReadonlyTargetInput 
-                label="Nama Proyek" 
-                value="Renovasi Dapur Modern Open Space - Kediaman Rico"
+            <ReadonlyTargetInput
+              label="Nama Proyek"
+              value="Renovasi Dapur Modern Open Space - Kediaman Rico"
             />
 
             <div className="grid grid-cols-1 gap-[1.25rem] md:grid-cols-2">
-              <ReadonlyTargetInput 
-                label="Tanggal Survei" 
-                value="15/03/2026" 
-              />
-              <ReadonlyTargetInput 
-                label="Target Tanggal Selesai" 
-                value="15/05/2026" 
+              <ReadonlyTargetInput label="Tanggal Survei" value="15/03/2026" />
+              <ReadonlyTargetInput
+                label="Target Tanggal Selesai"
+                value="15/05/2026"
               />
             </div>
 
-            <ReadonlyTargetInput 
-                label="Alamat Lengkap Proyek" 
-                value="Jl. Simpang Borobudur No. 45, Kec. Lowokwaru, Kota Malang"
+            <ReadonlyTargetInput
+              label="Alamat Lengkap Proyek"
+              value="Jl. Simpang Borobudur No. 45, Kec. Lowokwaru, Kota Malang"
             />
 
-            <ReadonlyTargetInput 
-                label="Deskripsi Pekerjaan" 
-                type="textarea"
-                rows={2}
-                value="Transformasi total area dapur meliputi pembongkaran kabinet lama, penggantian lantai, instalasi ulang jalur air dan listrik, serta pemasangan kitchen set kustom dengan material HPL premium."
+            <ReadonlyTargetInput
+              label="Deskripsi Pekerjaan"
+              type="textarea"
+              rows={2}
+              value="Transformasi total area dapur meliputi pembongkaran kabinet lama, penggantian lantai, instalasi ulang jalur air dan listrik, serta pemasangan kitchen set kustom dengan material HPL premium."
             />
 
             <div className="mt-4 flex flex-col gap-[1.25rem]">
               <h3 className="text-[1.125rem] font-semibold text-[var(--text-black)]">
                 Urutan Tahapan
               </h3>
-              <ReadonlyTargetInput 
-                label="Tahapan 1" 
+              <ReadonlyTargetInput
+                label="Tahapan 1"
                 value="Pembongkaran area dapur lama dan pembersihan puing material."
               />
-              <ReadonlyTargetInput 
-                label="Tahapan 2" 
+              <ReadonlyTargetInput
+                label="Tahapan 2"
                 value="Instalasi jalur pipa air baru (wastafel) dan titik kelistrikan (oven/kulkas)."
               />
-              <ReadonlyTargetInput 
-                label="Tahapan 3" 
+              <ReadonlyTargetInput
+                label="Tahapan 3"
                 value="Pengerjaan lantai granit dan finishing cat dinding bagian belakang."
               />
-              <ReadonlyTargetInput 
-                label="Tahapan 4" 
+              <ReadonlyTargetInput
+                label="Tahapan 4"
                 value="Pemasangan kabinet kitchen set bawah, top table, dan kabinet gantung."
               />
-              <ReadonlyTargetInput 
-                label="Tahapan 5" 
+              <ReadonlyTargetInput
+                label="Tahapan 5"
                 value="Finishing akhir, pemasangan lampu LED, dan pembersihan menyeluruh."
               />
-              <ReadonlyTargetInput 
-                label="Syarat Tahapan" 
+              <ReadonlyTargetInput
+                label="Syarat Tahapan"
                 type="textarea"
                 rows={2}
                 value="Pemasangan kabinet (Tahapan 4) hanya dapat dilakukan setelah instalasi listrik dan lantai (Tahapan 2 & 3) selesai 100% untuk menghindari kerusakan material."
@@ -116,7 +144,24 @@ export default function ClientTargetPengerjaanPage() {
               akan dipantau secara berkala melalui laporan progres harian di
               aplikasi Mandorin.
             </p>
-            
+
+            <div className="flex flex-col items-center gap-3 md:flex-row md:justify-center">
+              <button
+                type="button"
+                onClick={handleApproveProposal}
+                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--green-dark)]"
+              >
+                Setuju
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRejectProposal}
+                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--red-dark)]"
+              >
+                Tolak
+              </button>
+            </div>
           </div>
         </section>
       </main>

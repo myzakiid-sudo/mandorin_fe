@@ -19,7 +19,7 @@ export default function PublicFooter() {
                 alt="MandorIn"
                 width={48}
                 height={48}
-                className="h-12 w-12 object-contain"
+                className="object-contain"
               />
             </div>
 
@@ -55,7 +55,13 @@ export default function PublicFooter() {
 
             <ul className="mt-5 space-y-4.5 text-[1.625rem] leading-[2.35rem] text-[var(--white-normal-hover)]">
               <li className="flex items-start gap-2.5">
-                <Image src="/images/icons/icon-lokasi.svg" alt="Lokasi" width={20} height={20} className="mt-1 h-5 w-5 shrink-0" />
+                <Image
+                  src="/images/icons/icon-lokasi.svg"
+                  alt="Lokasi"
+                  width={20}
+                  height={20}
+                  className="mt-1 h-5 w-5 shrink-0"
+                />
                 <span>
                   Jl. Soekarno Hatta No. 124, Kel. Jatimulyo, Kec. Lowokwaru,
                   Kota Malang, Jawa Timur 65141
@@ -63,12 +69,24 @@ export default function PublicFooter() {
               </li>
 
               <li className="flex items-start gap-2.5">
-                <Image src="/images/icons/icon-telpon.svg" alt="Telpon" width={20} height={20} className="mt-1 h-5 w-5 shrink-0" />
+                <Image
+                  src="/images/icons/icon-telpon.svg"
+                  alt="Telpon"
+                  width={20}
+                  height={20}
+                  className="mt-1 h-5 w-5 shrink-0"
+                />
                 <span>+62 812-3456-7890</span>
               </li>
 
               <li className="flex items-start gap-2.5">
-                <Image src="/images/icons/icon-email.svg" alt="Email" width={20} height={20} className="mt-1 h-5 w-5 shrink-0" />
+                <Image
+                  src="/images/icons/icon-email.svg"
+                  alt="Email"
+                  width={20}
+                  height={20}
+                  className="mt-1 h-5 w-5 shrink-0"
+                />
                 <span>halo@mandorin.id</span>
               </li>
             </ul>

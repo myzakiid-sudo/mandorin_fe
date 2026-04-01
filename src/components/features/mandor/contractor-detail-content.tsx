@@ -33,7 +33,11 @@ export default function ContractorDetailContent({
         contractorId={contractorId}
         contractor={contractor}
       />
-      <ContractorDetailReason contractor={contractor} viewerRole={viewerRole} />
+      <ContractorDetailReason
+        contractorId={contractorId}
+        contractor={contractor}
+        viewerRole={viewerRole}
+      />
       <ContractorDetailTestimonials contractor={contractor} />
     </main>
   );

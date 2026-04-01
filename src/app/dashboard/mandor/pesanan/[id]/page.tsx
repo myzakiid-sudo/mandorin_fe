@@ -1,59 +1,23 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
-
-type BookingRequest = {
-  id: string;
-  fullName: string;
-  surveyDate: string;
-  surveyTime: string;
-  email: string;
-  whatsapp: string;
-  city: string;
-  projectAddress: string;
-  message: string;
-  status: "pending" | "agreed";
-};
-
-const bookingRequestById: Record<string, BookingRequest> = {
-  "1": {
-    id: "1",
-    fullName: "Anak Agung Hendrico",
-    surveyDate: "27 April 2026",
-    surveyTime: "09:00",
-    email: "hendrico@gmail.com",
-    whatsapp: "081365517979",
-    city: "Kota Malang",
-    projectAddress: "Jl. Simpang Borobudur No. 45, Kec. Lowokwaru, Kota Malang",
-    message: "Mau merenovasi dapur",
-    status: "pending",
-  },
-  "2": {
-    id: "2",
-    fullName: "Sri Rahayu",
-    surveyDate: "18 April 2026",
-    surveyTime: "10:30",
-    email: "sri.rahayu@gmail.com",
-    whatsapp: "081234567890",
-    city: "Kota Malang",
-    projectAddress: "Jl. Candi Panggung No. 12, Kec. Lowokwaru, Kota Malang",
-    message: "Renovasi kamar mandi utama",
-    status: "agreed",
-  },
-  "3": {
-    id: "3",
-    fullName: "Budi Santoso",
-    surveyDate: "10 Juni 2026",
-    surveyTime: "08:00",
-    email: "budi.santoso@gmail.com",
-    whatsapp: "082145678901",
-    city: "Kota Malang",
-    projectAddress: "Jl. Galunggung No. 8, Kec. Klojen, Kota Malang",
-    message: "Renovasi kamar tidur",
-    status: "pending",
-  },
-};
+import { useAuth } from "@/context/auth-context";
+import {
+  AppointmentAuthError,
+  getAppointmentById,
+  type Appointment,
+  updateAppointmentStatus,
+} from "@/lib/appointment-api";
+import { getClientDisplayByUserId } from "@/lib/client-api";
+import {
+  resolveMandorOrderPhase,
+  setMandorOrderFlow,
+} from "@/lib/mandor-order-flow";
 
 type ReadonlyInputProps = {
   label: string;
@@ -75,17 +39,186 @@ function ReadonlyInput({ label, value }: ReadonlyInputProps) {
   );
 }
 
-export default async function MandorPesananDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const bookingRequest = bookingRequestById[id];
+export default function MandorPesananDetailPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const { clearSession } = useAuth();
+  const id = String(params?.id ?? "");
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [clientName, setClientName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  if (!bookingRequest) {
-    notFound();
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadDetail = async () => {
+      setLoading(true);
+      setErrorMessage("");
+
+      try {
+        const data = await getAppointmentById(id);
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setAppointment(data);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        if (error instanceof AppointmentAuthError) {
+          clearSession();
+          setErrorMessage("Sesi login berakhir. Silakan login ulang.");
+          router.replace("/login");
+          return;
+        }
+
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Data pesanan tidak ditemukan.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    if (id) {
+      loadDetail();
+    } else {
+      setLoading(false);
+      setErrorMessage("ID pesanan tidak valid.");
+    }
+
+    return () => controller.abort();
+  }, [clearSession, id, router]);
+
+  useEffect(() => {
+    if (!appointment) {
+      setClientName("");
+      return;
+    }
+
+    const fallbackName =
+      appointment.client_name || `Client #${appointment.client_id}`;
+    setClientName(fallbackName);
+
+    let cancelled = false;
+
+    const loadClientName = async () => {
+      if (appointment.client_name) {
+        return;
+      }
+
+      const client = await getClientDisplayByUserId(
+        String(appointment.client_id),
+      );
+
+      if (cancelled || !client?.name?.trim()) {
+        return;
+      }
+
+      setClientName(client.name.trim());
+    };
+
+    loadClientName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appointment]);
+
+  const formatDate = (rawDate: string) => {
+    const parsed = new Date(rawDate);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return rawDate;
+    }
+
+    return parsed.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const handleUpdateStatus = async (status: "DISETUJUI" | "DITOLAK") => {
+    if (!appointment) {
+      return;
+    }
+
+    setIsUpdating(true);
+    setErrorMessage("");
+
+    try {
+      const updated = await updateAppointmentStatus(
+        String(appointment.id),
+        status,
+      );
+      setAppointment(updated);
+
+      if (status === "DISETUJUI") {
+        setMandorOrderFlow(String(appointment.id), { approved: true });
+        router.replace("/dashboard/mandor/pesanan");
+        return;
+      }
+
+      router.replace("/dashboard/mandor/pesanan");
+    } catch (error) {
+      if (error instanceof AppointmentAuthError) {
+        clearSession();
+        setErrorMessage("Sesi login berakhir. Silakan login ulang.");
+        router.replace("/login");
+        return;
+      }
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Gagal memperbarui status janji temu.",
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f3f3f3]">
+        <PublicNavbar />
+        <main className="mx-auto w-full max-w-[90rem] px-[1rem] py-[2rem] md:px-[2.5rem] xl:px-[6.25rem]">
+          <div className="rounded-[1rem] border border-[var(--black-light)] bg-white p-6 text-center text-[var(--text-muted)]">
+            Memuat detail pesanan...
+          </div>
+        </main>
+        <PublicFooter />
+      </div>
+    );
   }
+
+  if (!appointment) {
+    return (
+      <div className="min-h-screen bg-[#f3f3f3]">
+        <PublicNavbar />
+        <main className="mx-auto w-full max-w-[90rem] px-[1rem] py-[2rem] md:px-[2.5rem] xl:px-[6.25rem]">
+          <div className="rounded-[1rem] border border-[var(--black-light)] bg-white p-6 text-center text-[var(--red-normal)]">
+            {errorMessage || "Data pesanan tidak ditemukan."}
+          </div>
+        </main>
+        <PublicFooter />
+      </div>
+    );
+  }
+
+  const currentPhase = resolveMandorOrderPhase(
+    id,
+    appointment.status === "DISETUJUI" ? "approved" : "pending",
+  );
 
   return (
     <div className="min-h-screen bg-[#f3f3f3]">
@@ -99,71 +232,115 @@ export default async function MandorPesananDetailPage({
 
           <form className="mx-auto mt-[1.5rem] grid max-w-[65rem] grid-cols-1 gap-[0.875rem] md:mt-[2rem] md:grid-cols-2 md:gap-[1rem]">
             <div className="md:col-span-2">
-              <ReadonlyInput
-                label="Nama Lengkap"
-                value={bookingRequest.fullName}
-              />
+              <ReadonlyInput label="Lokasi" value={appointment.location} />
             </div>
 
             <ReadonlyInput
-              label="Tanggal Survei"
-              value={bookingRequest.surveyDate}
+              label="Tanggal"
+              value={formatDate(appointment.date)}
             />
-            <ReadonlyInput
-              label="Waktu yang Diinginkan"
-              value={bookingRequest.surveyTime}
-            />
+            <ReadonlyInput label="Waktu" value={appointment.time} />
 
-            <ReadonlyInput label="Alamat Email" value={bookingRequest.email} />
+            <ReadonlyInput label="Status" value={appointment.status} />
             <ReadonlyInput
-              label="Nomor WhatsApp"
-              value={bookingRequest.whatsapp}
+              label="Nama Client"
+              value={clientName || `Client #${appointment.client_id}`}
+            />
+            <ReadonlyInput
+              label="Client ID"
+              value={String(appointment.client_id)}
             />
 
             <div className="md:col-span-2">
               <ReadonlyInput
-                label="Kota / Wilayah"
-                value={bookingRequest.city}
+                label="Foreman ID"
+                value={String(appointment.foreman_id)}
               />
             </div>
 
             <div className="md:col-span-2">
-              <ReadonlyInput
-                label="Alamat Lengkap Proyek"
-                value={bookingRequest.projectAddress}
-              />
+              <ReadonlyInput label="Catatan" value={appointment.note || "-"} />
             </div>
 
-            <div className="md:col-span-2">
-              <ReadonlyInput
-                label="Detail Kebutuhan (Pesan)"
-                value={bookingRequest.message}
-              />
-            </div>
+            {errorMessage ? (
+              <p className="text-[0.75rem] leading-[1.125rem] text-[var(--red-normal)] md:col-span-2 md:text-[0.875rem] md:leading-[1.25rem]">
+                {errorMessage}
+              </p>
+            ) : null}
 
-            {bookingRequest.status === "pending" && (
+            {currentPhase === "pending" && (
               <>
                 <p className="text-[0.75rem] leading-[1.125rem] text-[var(--text-muted)] md:col-span-2 md:text-[0.875rem] md:leading-[1.25rem]">
-                  Dengan mengirim formulir ini, Anda setuju bahwa data di atas akan
-                  digunakan untuk keperluan survei dan jadwal konsultasi.
+                  Dengan mengirim formulir ini, Anda setuju bahwa data di atas
+                  akan digunakan untuk keperluan survei dan jadwal konsultasi.
                 </p>
 
                 <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
-                  <a
-                    href={`/dashboard/mandor/pesanan/${id}/target`}
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={() => handleUpdateStatus("DISETUJUI")}
                     className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[#2e2e31] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-black"
                   >
-                    Setuju
-                  </a>
+                    {isUpdating ? "Memproses..." : "Setuju"}
+                  </button>
 
                   <button
                     type="button"
+                    disabled={isUpdating}
+                    onClick={() => handleUpdateStatus("DITOLAK")}
                     className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-[#c81d1d]"
                   >
-                    Tidak Setuju
+                    {isUpdating ? "Memproses..." : "Tidak Setuju"}
                   </button>
                 </div>
               </>
+            )}
+
+            {currentPhase === "approved" && (
+              <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
+                <span className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white">
+                  Disetujui
+                </span>
+
+                <Link
+                  href={`/dashboard/mandor/pesanan/${id}/target`}
+                  className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-[var(--orange-dark)]"
+                >
+                  Buat Proposal
+                </Link>
+              </div>
+            )}
+
+            {currentPhase === "proposal_submitted" && (
+              <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
+                <span className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white">
+                  Proposal Dikirim
+                </span>
+
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex h-[2.5rem] w-full max-w-[18rem] cursor-not-allowed items-center justify-center rounded-[0.5rem] bg-[var(--btn-disabled-bg)] text-[0.938rem] font-semibold leading-[1.375rem] text-[var(--btn-disabled-text)]"
+                >
+                  Menunggu Persetujuan Klien
+                </button>
+              </div>
+            )}
+
+            {currentPhase === "client_approved" && (
+              <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
+                <span className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--blue-normal-active)] text-[0.938rem] font-semibold leading-[1.375rem] text-white">
+                  Disetujui Klien
+                </span>
+
+                <Link
+                  href={`/dashboard/mandor/projects/${id}`}
+                  className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-[var(--orange-dark)]"
+                >
+                  Masuk Proyek
+                </Link>
+              </div>
             )}
           </form>
         </section>

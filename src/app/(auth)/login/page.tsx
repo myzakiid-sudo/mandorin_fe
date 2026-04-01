@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Button from "@/components/ui/button";
 import BackgroundCircles from "@/components/ui/background-circles";
 
 export default function LoginPage() {
@@ -30,7 +29,7 @@ export default function LoginPage() {
             width={220}
             height={220}
             priority
-            className="object-contain"
+            className="h-auto w-auto object-contain"
           />
         </div>
 
@@ -42,23 +41,19 @@ export default function LoginPage() {
 
         {/* Tombol */}
         <div className="flex flex-col gap-3 w-full">
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
+          <button
             onClick={() => router.push("/login-client")}
+            className="inline-flex h-[3.25rem] w-full items-center justify-center rounded-lg bg-[var(--orange-normal)] px-5 text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
           >
             Masuk sebagai pemilik proyek
-          </Button>
+          </button>
 
-          <Button
-            variant="secondary"
-            size="lg"
-            fullWidth
+          <button
             onClick={() => router.push("/login-mandor")}
+            className="inline-flex h-[3.25rem] w-full items-center justify-center rounded-lg bg-[var(--blue-normal-active)] px-5 text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--blue-dark-hover)]"
           >
             Masuk sebagai mandor
-          </Button>
+          </button>
         </div>
       </div>
     </main>

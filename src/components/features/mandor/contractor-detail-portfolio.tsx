@@ -12,6 +12,22 @@ export default function ContractorDetailPortfolio({
   contractorId,
   contractor,
 }: ContractorDetailPortfolioProps) {
+  if (!contractor.portfolio.length) {
+    return (
+      <section className="mx-auto w-full max-w-[90rem] px-5 pb-12 pt-16 md:px-10 md:pb-16 md:pt-24 xl:px-[6.25rem]">
+        <h2 className="text-center text-3xl font-semibold leading-tight text-[var(--text-black)] md:text-4xl">
+          Rekam Jejak & Portofolio {contractor.name}
+        </h2>
+
+        <div className="mt-8 rounded-[1.25rem] border border-[var(--black-light)] bg-white px-5 py-6 text-center">
+          <p className="text-sm text-[var(--text-secondary)] md:text-base">
+            Portofolio mandor ini belum tersedia.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="mx-auto w-full max-w-[90rem] px-5 pb-12 pt-16 md:px-10 md:pb-16 md:pt-24 xl:px-[6.25rem]">
       <h2 className="text-center text-3xl font-semibold leading-tight text-[var(--text-black)] md:text-4xl">
@@ -50,7 +66,13 @@ export default function ContractorDetailPortfolio({
                   {item.description}
                 </p>
                 <span className="text-lg leading-none">
-                  <Image src="/images/icons/icon-panahkanan.svg" alt="Detail" width={16} height={16} className="invert brightness-0" />
+                  <Image
+                    src="/images/icons/icon-panahkanan.svg"
+                    alt="Detail"
+                    width={16}
+                    height={16}
+                    className="invert brightness-0"
+                  />
                 </span>
               </div>
             </div>

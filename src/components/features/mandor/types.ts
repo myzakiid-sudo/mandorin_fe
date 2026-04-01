@@ -5,6 +5,7 @@ export type ContractorSummary = {
   specialty: string;
   projects: string;
   projectCount: number;
+  experienceYears?: number;
   tier: "Gold" | "Silver" | "Bronze";
   rating: number;
   isReady: boolean;

@@ -4,9 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { contractorList } from "./data";
-
-const tierOptions = ["Semua", "Gold", "Silver", "Bronze"] as const;
+import type { ContractorSummary } from "./types";
 
 const tierClassName: Record<"Gold" | "Silver" | "Bronze", string> = {
   Gold: "bg-[#b48a1f] text-white",
@@ -14,35 +12,38 @@ const tierClassName: Record<"Gold" | "Silver" | "Bronze", string> = {
   Bronze: "bg-[#a7673d] text-white",
 };
 
-const heroRotation = [
-  { id: "rio-prasetya", years: "15+", name: "Rio Prasetya" },
-  { id: "aris-setiawan", years: "7+", name: "Aris Setiawan" },
-  { id: "budiwarman", years: "5+", name: "Budiwarman" },
-  { id: "ahmad-zaelani", years: "12+", name: "Ahmad Zaelani" },
-  { id: "nanang-sherman", years: "8+", name: "Nanang Suherman" },
-  { id: "bambang", years: "8+", name: "Bambang" },
-] as const;
+type ContractorListSectionProps = {
+  contractors: ContractorSummary[];
+  currentSearchName?: string;
+};
 
-export default function ContractorListSection() {
-  const [search, setSearch] = useState("");
-  const [tier, setTier] = useState<(typeof tierOptions)[number]>("Semua");
+export default function ContractorListSection({
+  contractors,
+  currentSearchName = "",
+}: ContractorListSectionProps) {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
-  const heroProfiles = useMemo(
-    () =>
-      heroRotation.map((item) => {
-        const contractor = contractorList.find((value) => value.id === item.id);
+  const heroProfiles = useMemo(() => {
+    if (!contractors.length) {
+      return [
+        {
+          id: "fallback",
+          years: "15+",
+          name: "Mitra MandorIn",
+          image: "/images/mandor/mandor-rio%20prasetyaa.png",
+        },
+      ];
+    }
 
-        return {
-          id: item.id,
-          years: item.years,
-          name: item.name,
-          image:
-            contractor?.image ?? "/images/mandor/mandor-rio%20prasetyaa.png",
-        };
-      }),
-    [],
-  );
+    return contractors.slice(0, 6).map((contractor) => ({
+      id: contractor.id,
+      years: contractor.experienceYears
+        ? `${contractor.experienceYears}+`
+        : "5+",
+      name: contractor.name,
+      image: contractor.image,
+    }));
+  }, [contractors]);
 
   useEffect(() => {
     if (heroProfiles.length < 2) return;
@@ -53,21 +54,6 @@ export default function ContractorListSection() {
 
     return () => window.clearInterval(rotationTimer);
   }, [heroProfiles.length]);
-
-  const filteredContractors = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return contractorList.filter((contractor) => {
-      const isTierMatch = tier === "Semua" ? true : contractor.tier === tier;
-      const isQueryMatch =
-        query.length === 0
-          ? true
-          : contractor.name.toLowerCase().includes(query) ||
-            contractor.specialty.toLowerCase().includes(query);
-
-      return isTierMatch && isQueryMatch;
-    });
-  }, [search, tier]);
 
   return (
     <main className="bg-[#ececec]">
@@ -147,21 +133,21 @@ export default function ContractorListSection() {
                           {profile.name}
                         </p>
                         <p className="text-[0.75rem] leading-tight text-[var(--orange-normal)]">
-                        <Image
-                          src="/images/icons/icon-5bintang.svg"
-                          alt="Rating 5 Bintang"
-                          width={60}
-                          height={12}
-                        />
+                          <Image
+                            src="/images/icons/icon-5bintang.svg"
+                            alt="Rating 5 Bintang"
+                            width={60}
+                            height={12}
+                          />
                         </p>
                       </div>
-                        <Image
-                          src="/images/icons/icon-panahkanan.svg"
-                          alt="arrow"
-                          width={18}
-                          height={18}
-                          aria-hidden="true"
-                        />
+                      <Image
+                        src="/images/icons/icon-panahkanan.svg"
+                        alt="arrow"
+                        width={18}
+                        height={18}
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
                 </div>
@@ -180,66 +166,52 @@ export default function ContractorListSection() {
             Temukan mandor ahli dengan portofolio teruji untuk mewujudkan hunian
             impian Anda.
           </p>
+
+          <form
+            action="/mandor"
+            method="GET"
+            className="mx-auto mt-6 flex w-full max-w-[34rem] flex-col gap-3 md:flex-row"
+          >
+            <input
+              type="text"
+              name="name"
+              defaultValue={currentSearchName}
+              placeholder="Cari nama mandor..."
+              className="h-11 w-full rounded-lg border border-[var(--black-light)] bg-white px-4 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
+            />
+
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-[var(--orange-normal)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+            >
+              Cari
+            </button>
+          </form>
+
+          {currentSearchName ? (
+            <p className="mt-3 text-sm text-[var(--text-secondary)]">
+              Hasil pencarian untuk: <strong>{currentSearchName}</strong>.{" "}
+              <Link
+                href="/mandor"
+                className="text-[var(--orange-normal)] underline"
+              >
+                Reset
+              </Link>
+            </p>
+          ) : null}
         </header>
 
-        <div className="mx-auto mt-8 flex w-full max-w-[34rem] flex-col gap-3 sm:flex-row">
-          <label
-            htmlFor="search-mandor"
-            className="flex flex-1 items-center gap-2 rounded-xl border border-[#c8c8c8] bg-white px-3"
-          >
-            <Image
-              src="/images/icons/icon-pencarian.svg"
-              alt="Search"
-              width={20}
-              height={20}
-              className="h-5 w-5 opacity-50"
-              aria-hidden="true"
-            />
-            <input
-              id="search-mandor"
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari nama atau layanan"
-              className="h-11 w-full bg-transparent text-[0.95rem] text-[var(--text-black)] outline-none placeholder:text-[var(--text-secondary)]"
-            />
-          </label>
-
-          <div className="relative sm:w-[10rem]">
-            <select
-              aria-label="Filter level mandor"
-              value={tier}
-              onChange={(event) =>
-                setTier(event.target.value as (typeof tierOptions)[number])
-              }
-              className="h-11 w-full appearance-none rounded-xl border border-[#c8c8c8] bg-white px-4 pr-9 text-[0.95rem] text-[var(--text-black)] outline-none"
-            >
-              {tierOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option === "Semua" ? "Filter" : option}
-                </option>
-              ))}
-            </select>
-            <Image
-              src="/images/icons/icon-dropdown.svg"
-              alt="Dropdown"
-              width={16}
-              height={16}
-              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
-
         <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {filteredContractors.map((contractor) => (
+          {contractors.map((contractor) => (
             <article
               key={contractor.id}
               className="group relative overflow-hidden rounded-[1.25rem] border border-[#f0af5f] bg-white p-3"
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="rounded-full border border-[var(--orange-normal)] bg-white px-3 py-1 text-[0.75rem] font-medium leading-none text-[var(--orange-normal)]">
-                  {contractor.projectCount} Proyek
+                  {contractor.experienceYears
+                    ? `${contractor.experienceYears} Tahun`
+                    : `${contractor.projectCount} Proyek`}
                 </span>
                 <span
                   className={`rounded-full px-3 py-1 text-[0.75rem] font-medium leading-none ${tierClassName[contractor.tier]}`}
@@ -284,7 +256,12 @@ export default function ContractorListSection() {
                     aria-label={`Lihat detail ${contractor.name}`}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[1rem] font-bold text-[var(--text-black)] transition-colors hover:bg-[var(--orange-light)]"
                   >
-                    <Image src="/images/icons/icon-panahkanan.svg" alt="Go" width={16} height={16} />
+                    <Image
+                      src="/images/icons/icon-panahkanan.svg"
+                      alt="Go"
+                      width={16}
+                      height={16}
+                    />
                   </Link>
                 ) : (
                   <button
@@ -293,19 +270,27 @@ export default function ContractorListSection() {
                     aria-label={`Detail ${contractor.name} belum tersedia`}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--white-normal)] text-[1rem] text-[var(--text-secondary)]"
                   >
-                    <Image src="/images/icons/icon-panahkanan.svg" alt="Go disabled" width={16} height={16} className="opacity-40" />
+                    <Image
+                      src="/images/icons/icon-panahkanan.svg"
+                      alt="Go disabled"
+                      width={16}
+                      height={16}
+                      className="opacity-40"
+                    />
                   </button>
                 )}
               </div>
             </article>
           ))}
-        </div>
 
-        {filteredContractors.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-[#d5d5d5] bg-white px-5 py-8 text-center text-[var(--text-secondary)]">
-            Mandor tidak ditemukan. Coba kata kunci lain atau ganti filter.
-          </div>
-        ) : null}
+          {!contractors.length ? (
+            <article className="rounded-[1.25rem] border border-[var(--black-light)] bg-white p-5 text-center md:col-span-2 xl:col-span-3">
+              <p className="text-sm text-[var(--text-secondary)]">
+                Data mandor belum tersedia saat ini.
+              </p>
+            </article>
+          ) : null}
+        </div>
       </section>
     </main>
   );

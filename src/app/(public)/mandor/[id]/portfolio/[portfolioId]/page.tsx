@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { contractorById } from "@/components/features/mandor/data";
+import { getForemanById } from "@/lib/foreman-api";
 
 export default async function ContractorPortfolioDetailPage({
   params,
@@ -8,12 +9,35 @@ export default async function ContractorPortfolioDetailPage({
   params: Promise<{ id: string; portfolioId: string }>;
 }) {
   const { id, portfolioId } = await params;
-  const contractor = contractorById[id];
-  const portfolioItem = contractor?.portfolio.find(
+  const localContractor = contractorById[id];
+  const localPortfolioItem = localContractor?.portfolio.find(
     (item) => item.id === portfolioId,
   );
 
-  if (!contractor || !portfolioItem) {
+  let portfolioItem = localPortfolioItem;
+
+  if (!portfolioItem && portfolioId === "api-portfolio") {
+    const foreman = await getForemanById(id);
+
+    if (foreman?.portfolio) {
+      portfolioItem = {
+        id: "api-portfolio",
+        title: foreman.field || "Portofolio Proyek",
+        description: `Portofolio ${foreman.name}`,
+        year: String(new Date().getFullYear()),
+        image: foreman.portfolio,
+        location: foreman.address || "Lokasi proyek belum tersedia",
+        status: "Selesai",
+        duration: "-",
+        area: "-",
+        details:
+          foreman.bio?.trim() ||
+          "Detail portofolio belum tersedia dari backend.",
+      };
+    }
+  }
+
+  if (!portfolioItem) {
     return (
       <main className="min-h-screen bg-[#0f172a] px-5 py-16 text-white md:px-10 xl:px-[6.25rem]">
         <div className="mx-auto w-full max-w-[90rem]">
@@ -55,7 +79,9 @@ export default async function ContractorPortfolioDetailPage({
               ? "Renovasi & Perluasan Kabin Kayu Minimalis"
               : portfolioItem.id === "porto-2"
                 ? "Pembangunan Hunian Klasik Modern - Cluster Emerald"
-                : "Renovasi Interior Dapur Modern"}
+                : portfolioItem.id === "api-portfolio"
+                  ? `Portofolio ${portfolioItem.title}`
+                  : "Renovasi Interior Dapur Modern"}
           </h1>
 
           <div className="space-y-1 text-[1.125rem] leading-9 md:text-[2rem] md:leading-[3.125rem]">

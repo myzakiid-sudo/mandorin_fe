@@ -1,24 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import type { ContractorDetail, ViewerRole } from "./types";
-import UploadProjectModal from "./upload-project-modal";
 import Link from "next/link";
+import { AppointmentAuthError, createAppointment } from "@/lib/appointment-api";
+import { useAuth } from "@/context/auth-context";
 
 type ContractorDetailReasonProps = {
+  contractorId: string;
   contractor: ContractorDetail;
   viewerRole: ViewerRole;
 };
 
 export default function ContractorDetailReason({
+  contractorId,
   contractor,
   viewerRole,
 }: ContractorDetailReasonProps) {
+  const router = useRouter();
+  const { authSession, clearSession, isReady } = useAuth();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const bookingSectionRef = useRef<HTMLElement | null>(null);
+  const parsedForemanId = Number(contractorId);
+  const hasValidForemanId = Number.isFinite(parsedForemanId);
 
   const handleOpenBooking = () => {
     if (!isBookingOpen) {
@@ -40,12 +49,59 @@ export default function ContractorDetailReason({
     });
   };
 
-  const handleOpenUpload = () => {
-    setIsUploadOpen(true);
-  };
+  const handleCreateAppointment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  const handleCloseUpload = () => {
-    setIsUploadOpen(false);
+    if (!isReady || !authSession || authSession.role !== "client") {
+      setSubmitError("Silakan login sebagai client terlebih dahulu.");
+      return;
+    }
+
+    if (!hasValidForemanId) {
+      setSubmitError("Mandor ini belum bisa menerima janji temu.");
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const location = String(formData.get("location") ?? "").trim();
+    const date = String(formData.get("date") ?? "").trim();
+    const time = String(formData.get("time") ?? "").trim();
+    const note = String(formData.get("note") ?? "").trim();
+
+    if (!location || !date || !time) {
+      setSubmitError("Lokasi, tanggal, dan waktu wajib diisi.");
+      return;
+    }
+
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      await createAppointment({
+        location,
+        date: `${date}T00:00:00.000Z`,
+        time,
+        note,
+        foremanId: parsedForemanId,
+      });
+
+      router.push("/dashboard/client/pesanan");
+    } catch (error) {
+      if (error instanceof AppointmentAuthError) {
+        clearSession();
+        setSubmitError("Sesi login berakhir. Silakan login ulang.");
+        router.replace("/login");
+        return;
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat membuat janji temu.";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -64,6 +120,7 @@ export default function ContractorDetailReason({
               <button
                 type="button"
                 onClick={handleOpenBooking}
+                disabled={!hasValidForemanId}
                 className="inline-flex h-[3.25rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-8 text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
               >
                 Buat Janji Temu
@@ -75,32 +132,7 @@ export default function ContractorDetailReason({
                 Hubungi
               </Link>
             </div>
-          ) : (
-            <div className="mt-8 flex md:justify-end">
-              <button
-                type="button"
-                onClick={handleOpenUpload}
-                className="inline-flex h-12 min-w-[14rem] items-center justify-center gap-2 rounded-lg bg-[var(--orange-normal)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
-              >
-                Upload new project
-                <svg
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M12 4v11m0-11-4 4m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                </svg>
-              </button>
-            </div>
-          )}
+          ) : null}
         </div>
       </section>
 
@@ -115,100 +147,64 @@ export default function ContractorDetailReason({
               Booking Jadwal Mandor
             </h3>
 
-            <form className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+            <form
+              onSubmit={handleCreateAppointment}
+              className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5"
+            >
               <label className="flex flex-col gap-2 md:col-span-2">
                 <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Nama Lengkap
+                  Lokasi
                 </span>
                 <input
                   type="text"
-                  name="fullName"
-                  className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  placeholder="Masukkan nama lengkap"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Tanggal Survei
-                </span>
-                <input
-                  type="date"
-                  name="surveyDate"
-                  className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Waktu yang Diinginkan
-                </span>
-                <input
-                  type="time"
-                  name="surveyTime"
-                  className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Alamat Email
-                </span>
-                <input
-                  type="email"
-                  name="email"
-                  className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  placeholder="nama@email.com"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Nomor WhatsApp
-                </span>
-                <input
-                  type="tel"
-                  name="whatsapp"
-                  className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  placeholder="08xxxxxxxxxx"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2 md:col-span-2">
-                <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Kota / Wilayah
-                </span>
-                <input
-                  type="text"
-                  name="city"
+                  name="location"
+                  required
                   className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
                   placeholder="Contoh: Malang"
                 />
               </label>
 
-              <label className="flex flex-col gap-2 md:col-span-2">
+              <label className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Alamat Lengkap Proyek
+                  Tanggal
                 </span>
                 <input
-                  type="text"
-                  name="projectAddress"
+                  type="date"
+                  name="date"
+                  required
                   className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  placeholder="Masukkan alamat proyek"
+                />
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
+                  Waktu
+                </span>
+                <input
+                  type="time"
+                  name="time"
+                  required
+                  className="h-11 rounded-md border border-[var(--black-light)] px-4 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
                 />
               </label>
 
               <label className="flex flex-col gap-2 md:col-span-2">
                 <span className="text-sm font-medium text-[var(--text-black)] md:text-base">
-                  Detail Kebutuhan (Pesan)
+                  Catatan
                 </span>
                 <textarea
-                  name="message"
+                  name="note"
                   rows={4}
                   className="rounded-md border border-[var(--black-light)] px-4 py-3 text-sm outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  placeholder="Tuliskan kebutuhan renovasi atau pembangunan Anda"
+                  placeholder="Contoh: tolong bawa meteran"
                 />
               </label>
+
+              {submitError ? (
+                <p className="text-xs leading-6 text-[var(--red-normal)] md:col-span-2 md:text-sm">
+                  {submitError}
+                </p>
+              ) : null}
 
               <p className="text-xs leading-6 text-[var(--text-secondary)] md:col-span-2 md:text-sm">
                 Dengan mengirim formulir ini, Anda setuju bahwa data di atas
@@ -218,22 +214,15 @@ export default function ContractorDetailReason({
               <div className="md:col-span-2 md:flex md:justify-center">
                 <button
                   type="submit"
-                  className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-[var(--orange-normal)] px-10 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] md:w-[15rem]"
+                  disabled={isSubmitting}
+                  className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-[var(--orange-normal)] px-10 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] disabled:cursor-not-allowed disabled:opacity-70 md:w-[15rem]"
                 >
-                  Kirim
+                  {isSubmitting ? "Menyimpan..." : "Kirim"}
                 </button>
               </div>
             </form>
           </div>
         </section>
-      ) : null}
-
-      {viewerRole === "mandor" ? (
-        <UploadProjectModal
-          contractor={contractor}
-          isOpen={isUploadOpen}
-          onClose={handleCloseUpload}
-        />
       ) : null}
     </>
   );

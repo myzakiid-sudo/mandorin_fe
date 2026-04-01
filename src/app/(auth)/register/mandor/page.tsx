@@ -2,22 +2,18 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
-import Button from "@/components/ui/button";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import UploadPortfolioModal from "@/components/features/auth/upload-portfolio-modal";
+import { useAuth } from "@/context/auth-context";
+import { extractAuthSession } from "@/lib/auth-session";
 
-const REGISTER_ENDPOINT = "https://be-internship.bccdev.id/dzaki/api/auth/register/foreman";
-const TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+const REGISTER_ENDPOINT =
+  "https://be-internship.bccdev.id/dzaki/api/auth/register/foreman";
 
 type RegisterApiResponse = {
   success?: boolean;
   message?: string;
-  data?: {
-    accessToken?: string;
-    data?: {
-      accessToken?: string;
-    };
-  };
+  data?: Record<string, unknown>;
 };
 
 const formFields: Array<{
@@ -42,17 +38,30 @@ const formFields: Array<{
 
 export default function RegisterMandorPage() {
   const router = useRouter();
+  const { setSession } = useAuth();
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   const todayDate = now.toISOString().split("T")[0];
 
   const [isFormComplete, setIsFormComplete] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+
   // State khusus Portofolio
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
 
-  const updateFormValidity = (formElement: HTMLFormElement, file: File | null = portfolioFile) => {
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
+
+  const updateFormValidity = (
+    formElement: HTMLFormElement,
+    file: File | null = portfolioFile,
+  ) => {
     const formData = new FormData(formElement);
 
     const allTextFieldsFilled = formFields.every((field) => {
@@ -69,21 +78,41 @@ export default function RegisterMandorPage() {
 
   const handlePortfolioConfirm = (file: File) => {
     setPortfolioFile(file);
-    const form = document.getElementById("register-mandor-form") as HTMLFormElement;
+    const form = document.getElementById(
+      "register-mandor-form",
+    ) as HTMLFormElement;
     if (form) updateFormValidity(form, file);
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setAvatarPreviewUrl("");
+      return;
+    }
+
+    const nextUrl = URL.createObjectURL(file);
+    setAvatarPreviewUrl((prev) => {
+      if (prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+
+      return nextUrl;
+    });
   };
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
-    
+
     // Inject portofolio file
     if (portfolioFile) {
-        formData.set("portfolio", portfolioFile);
+      formData.set("portfolio", portfolioFile);
     } else {
-        alert("Mohon unggah file portofolio terlebih dahulu!");
-        return;
+      alert("Mohon unggah file portofolio terlebih dahulu!");
+      return;
     }
 
     // Normaliasi format Backend API ("T00:00:00.000Z")
@@ -102,6 +131,7 @@ export default function RegisterMandorPage() {
     try {
       const response = await fetch(REGISTER_ENDPOINT, {
         method: "POST",
+        credentials: "include",
         body: formData,
       });
 
@@ -117,13 +147,13 @@ export default function RegisterMandorPage() {
         return;
       }
 
-      const accessToken = data.data?.accessToken || data.data?.data?.accessToken;
-      if (!accessToken) {
+      const authSession = extractAuthSession(data, "mandor");
+      if (!authSession) {
         alert("Registrasi berhasil, tetapi token tidak ditemukan.");
         return;
       }
 
-      saveAuthState(accessToken);
+      setSession(authSession);
 
       alert("Registrasi Mandor Berhasil!");
       router.push("/dashboard/mandor/projects");
@@ -142,7 +172,7 @@ export default function RegisterMandorPage() {
             alt="MandorIn"
             width={44}
             height={44}
-            className="h-[2.75rem] w-[2.75rem] object-contain"
+            className="object-contain"
             priority
           />
           <span className="text-[1.5rem] font-semibold text-[var(--orange-normal)]">
@@ -164,55 +194,69 @@ export default function RegisterMandorPage() {
             {/* Avatar Upload */}
             <label
               htmlFor="avatar"
-              className="mx-auto flex h-[6.5rem] w-[6.5rem] cursor-pointer items-center justify-center rounded-full bg-[var(--black-light)] transition-opacity hover:opacity-80"
+              className="mx-auto relative flex h-[6.5rem] w-[6.5rem] cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[var(--black-light)] transition-opacity hover:opacity-80"
               title="Unggah File Avatar Gambar"
             >
-              <span className="text-[3rem] leading-none text-[var(--text-black)]">+</span>
+              {avatarPreviewUrl ? (
+                <Image
+                  src={avatarPreviewUrl}
+                  alt="Preview avatar"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <span className="text-[3rem] leading-none text-[var(--text-black)]">
+                  +
+                </span>
+              )}
               <input
                 id="avatar"
                 name="avatar"
                 type="file"
                 accept="image/*"
                 required
+                onChange={handleAvatarChange}
                 className="hidden"
               />
             </label>
 
             {/* General Input Fields */}
             <div className="mt-4 flex flex-col gap-3 md:mt-6">
-                {formFields.map((field) => (
+              {formFields.map((field) => (
                 <div key={field.name} className="flex flex-col gap-1.5">
-                    <label
+                  <label
                     htmlFor={field.name}
                     className="text-sm font-medium text-[var(--text-black)]"
-                    >
+                  >
                     {field.label}
-                    </label>
-                    {field.name === "sex" ? (
+                  </label>
+                  {field.name === "sex" ? (
                     <select
-                        id={field.name}
-                        name={field.name}
-                        required
-                        defaultValue=""
-                        className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)] bg-white"
+                      id={field.name}
+                      name={field.name}
+                      required
+                      defaultValue=""
+                      className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)] bg-white"
                     >
-                        <option value="" disabled>Pilih jenis kelamin</option>
-                        <option value="male">Laki-laki</option>
-                        <option value="female">Perempuan</option>
+                      <option value="" disabled>
+                        Pilih jenis kelamin
+                      </option>
+                      <option value="male">Laki-laki</option>
+                      <option value="female">Perempuan</option>
                     </select>
-                    ) : (
+                  ) : (
                     <input
-                        id={field.name}
-                        name={field.name}
-                        type={field.type}
-                        min={field.name === "experience" ? 0 : undefined}
-                        max={field.name === "birth_date" ? todayDate : undefined}
-                        required
-                        className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
+                      id={field.name}
+                      name={field.name}
+                      type={field.type}
+                      min={field.name === "experience" ? 0 : undefined}
+                      max={field.name === "birth_date" ? todayDate : undefined}
+                      required
+                      className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
                     />
-                    )}
+                  )}
                 </div>
-                ))}
+              ))}
             </div>
 
             {/* Custom Portfolio File Trigger */}
@@ -220,17 +264,21 @@ export default function RegisterMandorPage() {
               <label className="text-sm font-medium text-[var(--text-black)]">
                 Foto Portofolio
               </label>
-              
+
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className={`flex h-[4.75rem] cursor-pointer items-center justify-center gap-3 rounded-md border border-[var(--black-light)] text-sm transition-colors hover:bg-[var(--white-normal-hover)] ${portfolioFile ? 'bg-[var(--green-light)] text-[var(--green-dark)] border-[var(--green-normal)]' : 'text-[var(--text-muted)]'}`}
+                className={`flex h-[4.75rem] cursor-pointer items-center justify-center gap-3 rounded-md border border-[var(--black-light)] text-sm transition-colors hover:bg-[var(--white-normal-hover)] ${portfolioFile ? "bg-[var(--green-light)] text-[var(--green-dark)] border-[var(--green-normal)]" : "text-[var(--text-muted)]"}`}
               >
-                <span>{portfolioFile ? `✔ Portofolio Tersimpan` : "Unggah Portofolio"}</span>
+                <span>
+                  {portfolioFile
+                    ? `✔ Portofolio Tersimpan`
+                    : "Unggah Portofolio"}
+                </span>
                 {!portfolioFile && (
-                    <span className="flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-[var(--black-light)] text-base font-semibold text-[var(--text-black)]">
+                  <span className="flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-[var(--black-light)] text-base font-semibold text-[var(--text-black)]">
                     ↑
-                    </span>
+                  </span>
                 )}
               </button>
             </div>
@@ -240,33 +288,27 @@ export default function RegisterMandorPage() {
               Kebijakan Privasi Mandorin.
             </p>
 
-            <Button
+            <button
               type="submit"
-              variant={isFormComplete ? "primary" : "outline"}
-              size="lg"
-              fullWidth
               disabled={!isFormComplete}
-              className="mx-auto mt-3 md:!w-[14.75rem]"
+              className={`mx-auto mt-3 inline-flex h-[3.25rem] w-full items-center justify-center rounded-lg px-5 text-[1rem] font-semibold transition-colors md:w-[14.75rem] ${
+                isFormComplete
+                  ? "bg-[var(--orange-normal)] text-white hover:bg-[var(--orange-dark)]"
+                  : "border border-[var(--btn-outline-border)] bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)]"
+              }`}
             >
               Daftar Mandor
-            </Button>
+            </button>
           </form>
         </section>
       </div>
 
       {/* Render the Modal Portofolio Pickup */}
-      <UploadPortfolioModal 
+      <UploadPortfolioModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handlePortfolioConfirm}
       />
     </main>
   );
-}
-
-function saveAuthState(accessToken: string) {
-  localStorage.setItem("token", accessToken);
-  localStorage.setItem("role", "mandor");
-  document.cookie = `token=${encodeURIComponent(accessToken)}; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
-  document.cookie = `role=mandor; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
 }

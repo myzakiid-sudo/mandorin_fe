@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/auth-context";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -21,7 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className={poppins.variable}>{children}</body>
+      <body className={poppins.variable}>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
