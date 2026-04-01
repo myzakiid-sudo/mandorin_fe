@@ -23,8 +23,8 @@ export default function ContractorDetailTestimonials({
                 <p className="text-sm leading-7 text-[var(--text-black)] md:text-base">
                   {testimonial.quote}
                 </p>
-                <p className="mt-3 text-sm font-semibold leading-6 text-[var(--orange-normal)]">
-                  ★★★★★
+                <p className="mt-3 text-sm font-semibold leading-6 text-[var(--orange-normal)] flex justify-center">
+                  <Image src="/images/icons/icon-5bintang.svg" alt="Rating 5 Bintang" width={90} height={16} />
                 </p>
               </div>
 

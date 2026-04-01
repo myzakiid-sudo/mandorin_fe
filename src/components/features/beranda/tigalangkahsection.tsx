@@ -1,10 +1,32 @@
-import Image from "next/image";
+"use client";
 
-const langkahMandor = [
+import Image from "next/image";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+const langkahClient = [
   {
     judul: "Cari & Pilih Mandor",
     deskripsi:
       "Jelajahi ribuan profil mandor profesional dengan portofolio yang sudah terverifikasi di wilayah Anda.",
+  },
+  {
+    judul: "Konsultasi & Buat Kesepakatan",
+    deskripsi:
+      "Diskusikan detail proyek, budget, dan jadwalkan pengerjaan melalui sistem kontrak digital yang transparan.",
+  },
+  {
+    judul: "Pantau Laporan Harian",
+    deskripsi:
+      "Terima pembaruan progres harian berupa foto dan laporan dari mandor langsung ke aplikasi Anda.",
+  },
+];
+
+const langkahMandor = [
+  {
+    judul: "Lengkapi Portofolio",
+    deskripsi:
+      "Unggah hasil pengerjaan proyek terbaik Anda untuk membangun reputasi dan menarik minat lebih banyak pemilik proyek.",
   },
   {
     judul: "Terima & Atur Proyek",
@@ -18,25 +40,41 @@ const langkahMandor = [
   },
 ];
 
+type RoleTab = "client" | "mandor";
+
 export default function TigaLangkahSection() {
+  const [activeTab, setActiveTab] = useState<RoleTab>("client");
+
+  const currentData = activeTab === "client" ? langkahClient : langkahMandor;
+
   return (
     <section className="w-full bg-[#f5f5f5] py-16 md:py-24">
       <div className="mx-auto w-full max-w-[90rem] px-5 md:px-10 xl:px-[6.25rem]">
-        <div className="mx-auto flex max-w-[22rem] flex-col items-center md:max-w-[26rem]">
-          <h2 className="text-center text-3xl font-semibold leading-tight text-[var(--text-black)] md:text-4xl">
-            Mulai Dalam Tiga Langkah
-          </h2>
-
-          <div className="mt-8 inline-flex rounded-full border border-[#f2cfab] bg-[#FAFAFA] p-1">
+        
+        {/* Toggle Nav */}
+        <div className="mx-auto flex flex-col items-center">
+          <div className="inline-flex rounded-full border border-[var(--orange-normal)] bg-white p-1">
             <button
               type="button"
-              className="rounded-full bg-[var(--orange-normal)] px-6 py-2 text-sm font-semibold leading-6 text-white"
+              onClick={() => setActiveTab("client")}
+              className={cn(
+                "rounded-full px-6 py-2 text-sm font-semibold transition-colors",
+                activeTab === "client"
+                  ? "bg-[var(--orange-normal)] text-white"
+                  : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]"
+              )}
             >
               Untuk Client
             </button>
             <button
               type="button"
-              className="rounded-full px-6 py-2 text-sm font-semibold leading-6 text-[#6f6f6f]"
+              onClick={() => setActiveTab("mandor")}
+              className={cn(
+                "rounded-full px-6 py-2 text-sm font-semibold transition-colors",
+                activeTab === "mandor"
+                  ? "bg-[var(--orange-normal)] text-white"
+                  : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]"
+              )}
             >
               Untuk Mandor
             </button>
@@ -55,7 +93,7 @@ export default function TigaLangkahSection() {
           </div>
 
           <div className="w-full space-y-6 lg:w-[48%]">
-            {langkahMandor.map((item) => (
+            {currentData.map((item) => (
               <article
                 key={item.judul}
                 className="rounded-[1.5rem] border border-[#f6eadc] bg-white px-7 py-8 text-center shadow-[0_0.625rem_1.875rem_rgba(0,0,0,0.04)] md:px-9"

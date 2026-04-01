@@ -13,6 +13,7 @@ type BookingRequest = {
   city: string;
   projectAddress: string;
   message: string;
+  status: "pending" | "agreed";
 };
 
 const bookingRequestById: Record<string, BookingRequest> = {
@@ -26,6 +27,7 @@ const bookingRequestById: Record<string, BookingRequest> = {
     city: "Kota Malang",
     projectAddress: "Jl. Simpang Borobudur No. 45, Kec. Lowokwaru, Kota Malang",
     message: "Mau merenovasi dapur",
+    status: "pending",
   },
   "2": {
     id: "2",
@@ -37,6 +39,7 @@ const bookingRequestById: Record<string, BookingRequest> = {
     city: "Kota Malang",
     projectAddress: "Jl. Candi Panggung No. 12, Kec. Lowokwaru, Kota Malang",
     message: "Renovasi kamar mandi utama",
+    status: "agreed",
   },
   "3": {
     id: "3",
@@ -48,6 +51,7 @@ const bookingRequestById: Record<string, BookingRequest> = {
     city: "Kota Malang",
     projectAddress: "Jl. Galunggung No. 8, Kec. Klojen, Kota Malang",
     message: "Renovasi kamar tidur",
+    status: "pending",
   },
 };
 
@@ -137,26 +141,30 @@ export default async function MandorPesananDetailPage({
               />
             </div>
 
-            <p className="text-[0.75rem] leading-[1.125rem] text-[var(--text-muted)] md:col-span-2 md:text-[0.875rem] md:leading-[1.25rem]">
-              Dengan mengirim formulir ini, Anda setuju bahwa data di atas akan
-              digunakan untuk keperluan survei dan jadwal konsultasi.
-            </p>
+            {bookingRequest.status === "pending" && (
+              <>
+                <p className="text-[0.75rem] leading-[1.125rem] text-[var(--text-muted)] md:col-span-2 md:text-[0.875rem] md:leading-[1.25rem]">
+                  Dengan mengirim formulir ini, Anda setuju bahwa data di atas akan
+                  digunakan untuk keperluan survei dan jadwal konsultasi.
+                </p>
 
-            <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
-              <a
-                href={`/dashboard/mandor/pesanan/${id}/target`}
-                className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[#2e2e31] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-black"
-              >
-                Setuju
-              </a>
+                <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
+                  <a
+                    href={`/dashboard/mandor/pesanan/${id}/target`}
+                    className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[#2e2e31] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-black"
+                  >
+                    Setuju
+                  </a>
 
-              <button
-                type="button"
-                className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-[#c81d1d]"
-              >
-                Tidak Setuju
-              </button>
-            </div>
+                  <button
+                    type="button"
+                    className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-[#c81d1d]"
+                  >
+                    Tidak Setuju
+                  </button>
+                </div>
+              </>
+            )}
           </form>
         </section>
       </main>

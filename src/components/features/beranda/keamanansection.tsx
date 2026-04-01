@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const poinKeamanan = [
   {
     judul: "Verifikasi Mandor",
@@ -26,21 +28,14 @@ export default function KeamananSection() {
               {poinKeamanan.map((item) => (
                 <div key={item.judul} className="flex gap-4">
                   <span className="mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--orange-normal)]">
-                    <svg
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                    <Image
+                      src="/images/icons/icon-centang.svg"
+                      alt="Check"
+                      width={16}
+                      height={16}
                       className="h-4 w-4"
                       aria-hidden="true"
-                    >
-                      <path
-                        d="M5 10.2L8.2 13.4L15 6.6"
-                        stroke="white"
-                        strokeWidth="2.3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    />
                   </span>
 
                   <div>

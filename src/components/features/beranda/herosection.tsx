@@ -1,16 +1,29 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { useSyncExternalStore } from "react";
+import BackgroundCircles from "@/components/ui/background-circles";
 
 export default function HeroSection() {
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  const role = isHydrated ? localStorage.getItem("role") : null;
+
+  let pesanHref = "/login";
+  if (role === "client") {
+    pesanHref = "/dashboard/client/chat";
+  } else if (role === "mandor") {
+    pesanHref = "/dashboard/mandor/chat";
+  }
+
   return (
     <section className="relative w-full overflow-hidden bg-white">
-      {/* Lingkaran dekoratif kiri atas */}
-      <div className="pointer-events-none absolute left-0 top-0 h-20 w-20 -translate-x-1/3 -translate-y-1/3 rounded-full bg-[var(--blue-dark-24)] md:h-24 md:w-24" />
-      <div className="pointer-events-none absolute left-14 top-24 h-3 w-3 rounded-full bg-[var(--blue-dark-24)] md:left-20 md:top-28 md:h-4 md:w-4" />
-      <div className="pointer-events-none absolute left-10 top-36 h-5 w-5 rounded-full bg-[var(--blue-dark-24)] md:left-16 md:top-44 md:h-6 md:w-6" />
-
-      {/* Lingkaran dekoratif kanan bawah */}
-      <div className="pointer-events-none absolute bottom-0 right-0 h-16 w-16 translate-x-1/4 translate-y-1/4 rounded-full bg-[var(--orange-normal-24)] md:h-24 md:w-24" />
-      <div className="pointer-events-none absolute bottom-20 right-20 h-5 w-5 rounded-full bg-[var(--orange-normal-24)] md:bottom-24 md:right-24 md:h-6 md:w-6" />
+      <BackgroundCircles />
 
       {/* Konten */}
       <div className="mx-auto max-w-[90rem] px-5 py-16 md:px-10 md:py-24 xl:px-[6.25rem]">
@@ -32,6 +45,13 @@ export default function HeroSection() {
               menjadi lebih terukur, kredibel, dan dapat dipantau dari mana
               saja.
             </p>
+
+            <Link
+              href={pesanHref}
+              className="inline-flex h-[3.25rem] items-center justify-center rounded-full bg-[var(--orange-normal)] px-10 text-[1rem] font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Pesan
+            </Link>
           </div>
 
           {/* ── Kanan: Foto Hero ── */}

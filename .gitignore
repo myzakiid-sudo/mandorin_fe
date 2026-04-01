@@ -40,5 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local copilot customization
-.github/copilot-instructions.md
+# 
+.github/

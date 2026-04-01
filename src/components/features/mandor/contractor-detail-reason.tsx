@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import type { ContractorDetail, ViewerRole } from "./types";
 import UploadProjectModal from "./upload-project-modal";
+import Link from "next/link";
 
 type ContractorDetailReasonProps = {
   contractor: ContractorDetail;
@@ -59,13 +60,21 @@ export default function ContractorDetailReason({
           </p>
 
           {viewerRole === "client" ? (
-            <button
-              type="button"
-              onClick={handleOpenBooking}
-              className="mt-8 inline-flex h-12 min-w-[14rem] items-center justify-center rounded-lg bg-[var(--orange-normal)] px-8 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
-            >
-              Buat Janji Temu
-            </button>
+            <div className="mt-8 flex flex-col gap-[1rem] max-w-[20rem]">
+              <button
+                type="button"
+                onClick={handleOpenBooking}
+                className="inline-flex h-[3.25rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-8 text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+              >
+                Buat Janji Temu
+              </button>
+              <Link
+                href="/dashboard/client/chat"
+                className="inline-flex h-[3.25rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-8 text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+              >
+                Hubungi
+              </Link>
+            </div>
           ) : (
             <div className="mt-8 flex md:justify-end">
               <button

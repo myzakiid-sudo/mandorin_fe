@@ -4,17 +4,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import Button from "@/components/ui/button";
+import UploadPortfolioModal from "@/components/features/auth/upload-portfolio-modal";
 
-const REGISTER_ENDPOINTS = [
-  "https://be-internship.bccdev.id/dzaki/api/auth/register/foreman",
-  "https://be-internship.bccdev.id/dzaki/api/auth/register/foremans",
-];
+const REGISTER_ENDPOINT = "https://be-internship.bccdev.id/dzaki/api/auth/register/foreman";
 const TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
-type RegisterMandorResponse = {
+type RegisterApiResponse = {
   success?: boolean;
   message?: string;
-  errors?: string[] | Record<string, string | string[] | undefined> | string;
   data?: {
     accessToken?: string;
     data?: {
@@ -48,10 +45,14 @@ export default function RegisterMandorPage() {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   const todayDate = now.toISOString().split("T")[0];
-  const [isFormComplete, setIsFormComplete] = useState(false);
-  const isDevMode = process.env.NODE_ENV !== "production";
 
-  const updateFormValidity = (formElement: HTMLFormElement) => {
+  const [isFormComplete, setIsFormComplete] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // State khusus Portofolio
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+
+  const updateFormValidity = (formElement: HTMLFormElement, file: File | null = portfolioFile) => {
     const formData = new FormData(formElement);
 
     const allTextFieldsFilled = formFields.every((field) => {
@@ -60,50 +61,35 @@ export default function RegisterMandorPage() {
     });
 
     const avatar = formData.get("avatar");
-    const portfolio = formData.get("portfolio");
     const hasAvatar = avatar instanceof File && avatar.size > 0;
-    const hasPortfolio = portfolio instanceof File && portfolio.size > 0;
+    const hasPortfolio = file !== null;
 
     setIsFormComplete(allTextFieldsFilled && hasAvatar && hasPortfolio);
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handlePortfolioConfirm = (file: File) => {
+    setPortfolioFile(file);
+    const form = document.getElementById("register-mandor-form") as HTMLFormElement;
+    if (form) updateFormValidity(form, file);
+  };
 
-    const formData = new FormData(event.currentTarget);
-    const rawBirthDateValue = formData.get("birth_date");
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    const missingField = formFields.find((field) => {
-      const value = formData.get(field.name);
-      return typeof value !== "string" || value.trim() === "";
-    });
-    if (missingField) {
-      alert(
-        missingField.name === "sex"
-          ? "Jenis kelamin wajib dipilih."
-          : `${missingField.label} wajib diisi.`,
-      );
-      return;
+    const formData = new FormData(e.currentTarget);
+    
+    // Inject portofolio file
+    if (portfolioFile) {
+        formData.set("portfolio", portfolioFile);
+    } else {
+        alert("Mohon unggah file portofolio terlebih dahulu!");
+        return;
     }
 
-    const avatar = formData.get("avatar");
-    const portfolio = formData.get("portfolio");
-    const hasAvatar = avatar instanceof File && avatar.size > 0;
-    const hasPortfolio = portfolio instanceof File && portfolio.size > 0;
-    if (!hasAvatar || !hasPortfolio) {
-      alert("Foto profil dan foto portofolio wajib diunggah.");
-      return;
-    }
-
-    const sexValue = formData.get("sex");
-    if (typeof sexValue === "string") {
-      const normalizedSex = normalizeSexValue(sexValue);
-      formData.set("sex", normalizedSex);
-    }
-
+    // Normaliasi format Backend API ("T00:00:00.000Z")
     const birthDateValue = formData.get("birth_date");
     if (typeof birthDateValue === "string" && birthDateValue) {
-      formData.set("birth_date", birthDateValue);
+      formData.set("birth_date", `${birthDateValue}T00:00:00.000Z`);
     }
 
     const password = formData.get("password");
@@ -113,53 +99,42 @@ export default function RegisterMandorPage() {
       return;
     }
 
-    appendCompatibilityFields(formData, rawBirthDateValue);
-    console.info("Register mandor payload", buildPayloadPreview(formData));
-
     try {
-      const { endpoint, response, rawBody, data } =
-        await submitWithEndpointFallback(formData);
+      const response = await fetch(REGISTER_ENDPOINT, {
+        method: "POST",
+        body: formData,
+      });
+
+      let data: RegisterApiResponse | null = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
 
       if (!response.ok || data?.success !== true) {
-        const detailMessage = buildApiErrorMessage(
-          data,
-          response.status,
-          rawBody,
-        );
-        console.warn("Register mandor gagal", {
-          endpoint,
-          status: response.status,
-          body: rawBody,
-          response: data,
-        });
-        alert(detailMessage);
+        alert(data?.message || "Gagal mendaftar, silakan periksa data Anda.");
         return;
       }
 
-      const accessToken =
-        data.data?.accessToken || data.data?.data?.accessToken;
+      const accessToken = data.data?.accessToken || data.data?.data?.accessToken;
       if (!accessToken) {
         alert("Registrasi berhasil, tetapi token tidak ditemukan.");
         return;
       }
 
       saveAuthState(accessToken);
-      alert("Registrasi mandor berhasil!");
+
+      alert("Registrasi Mandor Berhasil!");
       router.push("/dashboard/mandor/projects");
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn("Terjadi masalah saat register mandor:", message);
+      console.error("Terjadi masalah saat register mandor:", error);
       alert("Terjadi kesalahan jaringan.");
     }
   };
 
-  const handleDevLoginMandor = () => {
-    saveAuthState("dev-mandor-token");
-    router.push("/dashboard/mandor/projects");
-  };
-
   return (
-    <main className="min-h-screen bg-[var(--white-normal-hover)]">
+    <main className="min-h-screen bg-[var(--white-normal-hover)] relative">
       <div className="mx-auto w-full max-w-[90rem] px-5 py-6 md:px-10 md:py-8 xl:px-[6.25rem]">
         <header className="flex items-center gap-3">
           <Image
@@ -177,92 +152,90 @@ export default function RegisterMandorPage() {
 
         <section className="mt-5 rounded-2xl border border-[var(--black-light)] bg-[var(--white-normal)] px-5 py-8 shadow-sm md:px-10 md:py-10">
           <h1 className="text-center text-2xl font-semibold text-[var(--text-black)]">
-            Isi Data Diri
+            Isi Data Diri Mandor
           </h1>
 
           <form
-            className="mx-auto mt-6 flex w-full max-w-[44rem] flex-col gap-3"
-            onSubmit={handleSubmit}
+            id="register-mandor-form"
+            onSubmit={handleRegister}
             onChange={(e) => updateFormValidity(e.currentTarget)}
+            className="mx-auto mt-6 flex w-full max-w-[44rem] flex-col gap-3"
           >
+            {/* Avatar Upload */}
             <label
               htmlFor="avatar"
               className="mx-auto flex h-[6.5rem] w-[6.5rem] cursor-pointer items-center justify-center rounded-full bg-[var(--black-light)] transition-opacity hover:opacity-80"
+              title="Unggah File Avatar Gambar"
             >
-              <span className="text-[3rem] leading-none text-[var(--text-black)]">
-                +
-              </span>
+              <span className="text-[3rem] leading-none text-[var(--text-black)]">+</span>
               <input
                 id="avatar"
                 name="avatar"
                 type="file"
                 accept="image/*"
+                required
                 className="hidden"
               />
             </label>
 
-            {formFields.map((field) => (
-              <div key={field.name} className="flex flex-col gap-1.5">
-                <label
-                  htmlFor={field.name}
-                  className="text-sm font-medium text-[var(--text-black)]"
-                >
-                  {field.label}
-                </label>
-                {field.name === "sex" ? (
-                  <select
-                    id={field.name}
-                    name={field.name}
-                    required
-                    defaultValue=""
-                    className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  >
-                    <option value="" disabled>
-                      Pilih jenis kelamin
-                    </option>
-                    <option value="male">Laki-laki</option>
-                    <option value="female">Perempuan</option>
-                  </select>
-                ) : (
-                  <input
-                    id={field.name}
-                    name={field.name}
-                    type={field.type}
-                    min={field.name === "experience" ? 0 : undefined}
-                    max={field.name === "birth_date" ? todayDate : undefined}
-                    required
-                    className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  />
-                )}
-              </div>
-            ))}
-
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="portfolio"
-                className="text-sm font-medium text-[var(--text-black)]"
-              >
-                Foto Portofolio
-              </label>
-              <label
-                htmlFor="portfolio"
-                className="flex h-[4.75rem] cursor-pointer items-center justify-center gap-3 rounded-md border border-[var(--black-light)] text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--white-normal-hover)]"
-              >
-                <span>Unggah Portofolio</span>
-                <span className="flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-[var(--black-light)] text-base font-semibold text-[var(--text-black)]">
-                  ↑
-                </span>
-              </label>
-              <input
-                id="portfolio"
-                name="portfolio"
-                type="file"
-                accept="image/*"
-                className="hidden"
-              />
+            {/* General Input Fields */}
+            <div className="mt-4 flex flex-col gap-3 md:mt-6">
+                {formFields.map((field) => (
+                <div key={field.name} className="flex flex-col gap-1.5">
+                    <label
+                    htmlFor={field.name}
+                    className="text-sm font-medium text-[var(--text-black)]"
+                    >
+                    {field.label}
+                    </label>
+                    {field.name === "sex" ? (
+                    <select
+                        id={field.name}
+                        name={field.name}
+                        required
+                        defaultValue=""
+                        className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)] bg-white"
+                    >
+                        <option value="" disabled>Pilih jenis kelamin</option>
+                        <option value="male">Laki-laki</option>
+                        <option value="female">Perempuan</option>
+                    </select>
+                    ) : (
+                    <input
+                        id={field.name}
+                        name={field.name}
+                        type={field.type}
+                        min={field.name === "experience" ? 0 : undefined}
+                        max={field.name === "birth_date" ? todayDate : undefined}
+                        required
+                        className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
+                    />
+                    )}
+                </div>
+                ))}
             </div>
 
-            <p className="mt-2 text-xs text-[var(--text-muted)]">
+            {/* Custom Portfolio File Trigger */}
+            <div className="flex flex-col gap-1.5 mt-2">
+              <label className="text-sm font-medium text-[var(--text-black)]">
+                Foto Portofolio
+              </label>
+              
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className={`flex h-[4.75rem] cursor-pointer items-center justify-center gap-3 rounded-md border border-[var(--black-light)] text-sm transition-colors hover:bg-[var(--white-normal-hover)] ${portfolioFile ? 'bg-[var(--green-light)] text-[var(--green-dark)] border-[var(--green-normal)]' : 'text-[var(--text-muted)]'}`}
+              >
+                <span>{portfolioFile ? `✔ Portofolio Tersimpan` : "Unggah Portofolio"}</span>
+                {!portfolioFile && (
+                    <span className="flex h-[1.75rem] w-[1.75rem] items-center justify-center rounded-full bg-[var(--black-light)] text-base font-semibold text-[var(--text-black)]">
+                    ↑
+                    </span>
+                )}
+              </button>
+            </div>
+
+            <p className="mt-4 text-xs text-[var(--text-muted)]">
               Dengan mendaftar, saya menyetujui Syarat & Ketentuan serta
               Kebijakan Privasi Mandorin.
             </p>
@@ -275,24 +248,18 @@ export default function RegisterMandorPage() {
               disabled={!isFormComplete}
               className="mx-auto mt-3 md:!w-[14.75rem]"
             >
-              Kirim
+              Daftar Mandor
             </Button>
-
-            {isDevMode ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                fullWidth
-                onClick={handleDevLoginMandor}
-                className="mx-auto mt-2 md:!w-[14.75rem]"
-              >
-                Masuk Mandor (Dev)
-              </Button>
-            ) : null}
           </form>
         </section>
       </div>
+
+      {/* Render the Modal Portofolio Pickup */}
+      <UploadPortfolioModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handlePortfolioConfirm}
+      />
     </main>
   );
 }
@@ -302,187 +269,4 @@ function saveAuthState(accessToken: string) {
   localStorage.setItem("role", "mandor");
   document.cookie = `token=${encodeURIComponent(accessToken)}; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
   document.cookie = `role=mandor; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; samesite=lax`;
-}
-
-function normalizeSexValue(value: string) {
-  const normalized = value.trim().toLowerCase();
-  if (["l", "laki-laki", "laki", "male", "pria"].includes(normalized)) {
-    return "male";
-  }
-  if (["p", "perempuan", "female", "famele", "wanita"].includes(normalized)) {
-    return "female";
-  }
-  return value.trim();
-}
-
-function buildApiErrorMessage(
-  data: RegisterMandorResponse | null,
-  status: number,
-  rawBody?: string,
-) {
-  const baseMessage =
-    data?.message || `Registrasi mandor gagal (HTTP ${status}).`;
-  const errors = data?.errors;
-
-  if (!errors) {
-    return baseMessage;
-  }
-
-  if (typeof errors === "string") {
-    return `${baseMessage}\n${errors}`;
-  }
-
-  if (Array.isArray(errors)) {
-    return `${baseMessage}\n${errors.join("\n")}`;
-  }
-
-  const lines = Object.entries(errors)
-    .flatMap(([key, value]) => {
-      if (!value) {
-        return [];
-      }
-      if (Array.isArray(value)) {
-        return value.map((item) => `${key}: ${item}`);
-      }
-      return `${key}: ${value}`;
-    })
-    .filter(Boolean);
-
-  if (lines.length > 0) {
-    return `${baseMessage}\n${lines.join("\n")}`;
-  }
-
-  if (rawBody && rawBody.trim() !== "") {
-    return `${baseMessage}\nDetail server: ${rawBody}`;
-  }
-
-  return baseMessage;
-}
-
-function parseRegisterResponse(rawBody: string): RegisterMandorResponse | null {
-  if (!rawBody || rawBody.trim() === "") {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawBody) as RegisterMandorResponse;
-  } catch {
-    return null;
-  }
-}
-
-function appendCompatibilityFields(
-  formData: FormData,
-  rawBirthDateValue: FormDataEntryValue | null,
-) {
-  addAlias(formData, "full_name", "name");
-  addAlias(formData, "gender", "sex");
-  addAlias(formData, "phone_number", "phone");
-  addAlias(formData, "phoneNumber", "phone");
-  addAlias(formData, "specialization", "field");
-  addAlias(formData, "experience_year", "experience");
-  addAlias(formData, "experience_years", "experience");
-  addAlias(formData, "confirm_password", "confirm");
-  addAlias(formData, "confirmPassword", "confirm");
-  addAlias(formData, "portofolio", "portfolio");
-  addAlias(formData, "portfolio_file", "portfolio");
-
-  if (typeof rawBirthDateValue === "string" && rawBirthDateValue) {
-    setIfMissing(formData, "birthDate", rawBirthDateValue);
-    setIfMissing(formData, "date_of_birth", rawBirthDateValue);
-  }
-
-  const nameValue = formData.get("name");
-  const nickValue = formData.get("nick");
-  if (
-    (!nickValue ||
-      (typeof nickValue === "string" && nickValue.trim() === "")) &&
-    typeof nameValue === "string"
-  ) {
-    const suggestedNick = nameValue.trim().split(" ")[0];
-    if (suggestedNick) {
-      formData.set("nick", suggestedNick);
-    }
-  }
-}
-
-function addAlias(formData: FormData, aliasKey: string, sourceKey: string) {
-  const sourceValue = formData.get(sourceKey);
-  if (sourceValue == null) {
-    return;
-  }
-
-  if (sourceValue instanceof File) {
-    if (sourceValue.size <= 0) {
-      return;
-    }
-    formData.set(aliasKey, sourceValue);
-    return;
-  }
-
-  if (typeof sourceValue === "string" && sourceValue.trim() !== "") {
-    formData.set(aliasKey, sourceValue);
-  }
-}
-
-function setIfMissing(formData: FormData, key: string, value: string) {
-  const current = formData.get(key);
-  if (typeof current === "string" && current.trim() !== "") {
-    return;
-  }
-  formData.set(key, value);
-}
-
-function buildPayloadPreview(formData: FormData) {
-  const entries: Record<string, string> = {};
-
-  formData.forEach((value, key) => {
-    if (value instanceof File) {
-      entries[key] = value.name
-        ? `file:${value.name} (${value.size} bytes)`
-        : "file:empty";
-      return;
-    }
-
-    entries[key] = value;
-  });
-
-  return entries;
-}
-
-async function submitWithEndpointFallback(formData: FormData) {
-  let lastResult: {
-    endpoint: string;
-    response: Response;
-    rawBody: string;
-    data: RegisterMandorResponse | null;
-  } | null = null;
-
-  for (const endpoint of REGISTER_ENDPOINTS) {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      body: formData,
-    });
-
-    const rawBody = await response.text();
-    const data = parseRegisterResponse(rawBody);
-
-    lastResult = { endpoint, response, rawBody, data };
-
-    if (response.ok && data?.success === true) {
-      return lastResult;
-    }
-
-    // Retry only when endpoint is not found.
-    // For any other status, keep this response as the main diagnostic result.
-    if (response.status !== 404) {
-      return lastResult;
-    }
-  }
-
-  if (lastResult) {
-    return lastResult;
-  }
-
-  throw new Error("Semua endpoint register mandor gagal diakses.");
 }

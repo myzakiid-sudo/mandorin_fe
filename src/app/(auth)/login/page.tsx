@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/button";
+import BackgroundCircles from "@/components/ui/background-circles";
 
 export default function LoginPage() {
   const router = useRouter();
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden flex items-center justify-center bg-[var(--white-normal)]">
-      {/* ── Background radial gradient tengah ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -18,13 +18,7 @@ export default function LoginPage() {
         }}
       />
 
-      {/* ── Lingkaran dekoratif kiri atas (biru, opacity 24%) ── */}
-      <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full pointer-events-none bg-[var(--blue-dark-24)]" />
-      <div className="absolute top-32 left-8 w-10 h-10 rounded-full pointer-events-none bg-[var(--blue-dark-24)]" />
-
-      {/* ── Lingkaran dekoratif kanan bawah (orange, opacity 24%) ── */}
-      <div className="absolute -bottom-16 -right-16 w-72 h-72 rounded-full pointer-events-none bg-[var(--orange-normal-24)]" />
-      <div className="absolute bottom-24 right-16 w-6 h-6 rounded-full pointer-events-none bg-[var(--orange-normal-24)]" />
+      <BackgroundCircles />
 
       {/* ── Konten utama ── */}
       <div className="relative z-10 flex flex-col items-center text-center px-5 w-full max-w-[528px]">

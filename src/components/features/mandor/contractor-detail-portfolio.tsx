@@ -49,7 +49,9 @@ export default function ContractorDetailPortfolio({
                 <p className="text-sm leading-6 text-white/90">
                   {item.description}
                 </p>
-                <span className="text-lg leading-none">→</span>
+                <span className="text-lg leading-none">
+                  <Image src="/images/icons/icon-panahkanan.svg" alt="Detail" width={16} height={16} className="invert brightness-0" />
+                </span>
               </div>
             </div>
           </Link>

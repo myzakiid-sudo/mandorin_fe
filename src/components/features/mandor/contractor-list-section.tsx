@@ -147,15 +147,21 @@ export default function ContractorListSection() {
                           {profile.name}
                         </p>
                         <p className="text-[0.75rem] leading-tight text-[var(--orange-normal)]">
-                          ★★★★★
+                        <Image
+                          src="/images/icons/icon-5bintang.svg"
+                          alt="Rating 5 Bintang"
+                          width={60}
+                          height={12}
+                        />
                         </p>
                       </div>
-                      <span
-                        aria-hidden="true"
-                        className="text-[1.125rem] text-[var(--text-secondary)]"
-                      >
-                        →
-                      </span>
+                        <Image
+                          src="/images/icons/icon-panahkanan.svg"
+                          alt="arrow"
+                          width={18}
+                          height={18}
+                          aria-hidden="true"
+                        />
                     </div>
                   </div>
                 </div>
@@ -181,21 +187,14 @@ export default function ContractorListSection() {
             htmlFor="search-mandor"
             className="flex flex-1 items-center gap-2 rounded-xl border border-[#c8c8c8] bg-white px-3"
           >
-            <svg
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-[var(--text-secondary)]"
+            <Image
+              src="/images/icons/icon-pencarian.svg"
+              alt="Search"
+              width={20}
+              height={20}
+              className="h-5 w-5 opacity-50"
               aria-hidden="true"
-            >
-              <path
-                d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm10 16.6-4.35-4.35"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </svg>
+            />
             <input
               id="search-mandor"
               type="search"
@@ -221,21 +220,14 @@ export default function ContractorListSection() {
                 </option>
               ))}
             </select>
-            <svg
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]"
+            <Image
+              src="/images/icons/icon-dropdown.svg"
+              alt="Dropdown"
+              width={16}
+              height={16}
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50"
               aria-hidden="true"
-            >
-              <path
-                d="M5 7.5 10 12.5 15 7.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            />
           </div>
         </div>
 
@@ -292,7 +284,7 @@ export default function ContractorListSection() {
                     aria-label={`Lihat detail ${contractor.name}`}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[1rem] font-bold text-[var(--text-black)] transition-colors hover:bg-[var(--orange-light)]"
                   >
-                    →
+                    <Image src="/images/icons/icon-panahkanan.svg" alt="Go" width={16} height={16} />
                   </Link>
                 ) : (
                   <button
@@ -301,7 +293,7 @@ export default function ContractorListSection() {
                     aria-label={`Detail ${contractor.name} belum tersedia`}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--white-normal)] text-[1rem] text-[var(--text-secondary)]"
                   >
-                    →
+                    <Image src="/images/icons/icon-panahkanan.svg" alt="Go disabled" width={16} height={16} className="opacity-40" />
                   </button>
                 )}
               </div>

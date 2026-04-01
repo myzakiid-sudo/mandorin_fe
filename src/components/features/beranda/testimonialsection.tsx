@@ -44,7 +44,7 @@ export default function TestimonialSection() {
                 </p>
 
                 <div className="mt-5 text-[1.5rem] leading-none text-[var(--text-yellow)]">
-                  ★★★★★
+                  <Image src="/images/icons/icon-5bintang.svg" alt="Rating 5 Bintang" width={110} height={20} className="mx-auto" />
                 </div>
 
                 <span className="absolute bottom-0 left-1/2 h-8 w-8 -translate-x-1/2 translate-y-[55%] rounded-full bg-white shadow-[0_0.25rem_1rem_rgba(0,0,0,0.05)]" />
