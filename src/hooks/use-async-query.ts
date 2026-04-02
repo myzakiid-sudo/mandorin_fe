@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type UseAsyncQueryOptions<TData> = {
   enabled?: boolean;
@@ -21,6 +21,40 @@ export function useAsyncQuery<TData>({
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState("");
   const [reloadSeed, setReloadSeed] = useState(0);
+  const queryFnRef = useRef(queryFn);
+  const mapErrorRef = useRef(mapError);
+
+  useEffect(() => {
+    queryFnRef.current = queryFn;
+  }, [queryFn]);
+
+  useEffect(() => {
+    mapErrorRef.current = mapError;
+  }, [mapError]);
+
+  const depsSignature = useMemo(() => {
+    return deps
+      .map((value, index) => {
+        if (value == null) {
+          return `${index}:null`;
+        }
+
+        if (typeof value === "string" || typeof value === "number") {
+          return `${index}:${String(value)}`;
+        }
+
+        if (typeof value === "boolean") {
+          return `${index}:${value ? "1" : "0"}`;
+        }
+
+        try {
+          return `${index}:${JSON.stringify(value)}`;
+        } catch {
+          return `${index}:${String(value)}`;
+        }
+      })
+      .join("|");
+  }, [deps]);
 
   useEffect(() => {
     if (!enabled) {
@@ -35,7 +69,7 @@ export function useAsyncQuery<TData>({
       setError("");
 
       try {
-        const nextData = await queryFn();
+        const nextData = await queryFnRef.current();
 
         if (cancelled) {
           return;
@@ -47,8 +81,8 @@ export function useAsyncQuery<TData>({
           return;
         }
 
-        const message = mapError
-          ? mapError(error)
+        const message = mapErrorRef.current
+          ? mapErrorRef.current(error)
           : error instanceof Error
             ? error.message
             : "Terjadi kesalahan saat memuat data.";
@@ -66,15 +100,11 @@ export function useAsyncQuery<TData>({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, reloadSeed, ...deps]);
+  }, [enabled, reloadSeed, depsSignature]);
 
-  const refetch = useMemo(
-    () => () => {
-      setReloadSeed((prev) => prev + 1);
-    },
-    [],
-  );
+  const refetch = useCallback(() => {
+    setReloadSeed((prev) => prev + 1);
+  }, []);
 
   return {
     data,

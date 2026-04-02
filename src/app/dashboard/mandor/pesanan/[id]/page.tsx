@@ -10,14 +10,26 @@ import { useAuth } from "@/context/auth-context";
 import {
   AppointmentAuthError,
   getAppointmentById,
+  normalizeAppointmentStatus,
   type Appointment,
   updateAppointmentStatus,
 } from "@/lib/appointment-api";
 import { getClientDisplayByUserId } from "@/lib/client-api";
 import {
-  resolveMandorOrderPhase,
-  setMandorOrderFlow,
-} from "@/lib/mandor-order-flow";
+  isProposalApprovedStatus,
+  isProposalPendingStatus,
+  resolveProposalForOrder,
+} from "@/lib/proposal-api";
+import { formatDateId } from "@/lib/utils";
+import { useProposals } from "@/hooks/use-proposals";
+
+type MandorOrderPhase =
+  | "pending"
+  | "approved"
+  | "proposal_submitted"
+  | "client_approved"
+  | "completed"
+  | "rejected";
 
 type ReadonlyInputProps = {
   label: string;
@@ -39,6 +51,36 @@ function ReadonlyInput({ label, value }: ReadonlyInputProps) {
   );
 }
 
+const resolvePhaseFromServer = (
+  appointmentStatus: Appointment["status"],
+  proposalStatus?: string,
+): MandorOrderPhase => {
+  const normalizedAppointmentStatus =
+    normalizeAppointmentStatus(appointmentStatus);
+
+  if (normalizedAppointmentStatus === "SELESAI") {
+    return "completed";
+  }
+
+  if (normalizedAppointmentStatus === "DITOLAK") {
+    return "rejected";
+  }
+
+  if (normalizedAppointmentStatus !== "DISETUJUI") {
+    return "pending";
+  }
+
+  if (isProposalApprovedStatus(proposalStatus)) {
+    return "client_approved";
+  }
+
+  if (isProposalPendingStatus(proposalStatus)) {
+    return "proposal_submitted";
+  }
+
+  return "approved";
+};
+
 export default function MandorPesananDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -49,6 +91,24 @@ export default function MandorPesananDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const { data: proposals } = useProposals({
+    enabled: Boolean(
+      appointment &&
+      normalizeAppointmentStatus(appointment.status) === "DISETUJUI",
+    ),
+    deps: [
+      appointment?.id,
+      appointment?.status,
+      appointment?.client_id,
+      appointment?.foreman_id,
+      appointment?.location,
+    ],
+    onAuthError: () => {
+      clearSession();
+      router.replace("/login");
+    },
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -133,20 +193,6 @@ export default function MandorPesananDetailPage() {
     };
   }, [appointment]);
 
-  const formatDate = (rawDate: string) => {
-    const parsed = new Date(rawDate);
-
-    if (Number.isNaN(parsed.getTime())) {
-      return rawDate;
-    }
-
-    return parsed.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
   const handleUpdateStatus = async (status: "DISETUJUI" | "DITOLAK") => {
     if (!appointment) {
       return;
@@ -161,13 +207,6 @@ export default function MandorPesananDetailPage() {
         status,
       );
       setAppointment(updated);
-
-      if (status === "DISETUJUI") {
-        setMandorOrderFlow(String(appointment.id), { approved: true });
-        router.replace("/dashboard/mandor/pesanan");
-        return;
-      }
-
       router.replace("/dashboard/mandor/pesanan");
     } catch (error) {
       if (error instanceof AppointmentAuthError) {
@@ -215,9 +254,10 @@ export default function MandorPesananDetailPage() {
     );
   }
 
-  const currentPhase = resolveMandorOrderPhase(
-    id,
-    appointment.status === "DISETUJUI" ? "approved" : "pending",
+  const matchedProposal = resolveProposalForOrder(appointment, proposals);
+  const currentPhase = resolvePhaseFromServer(
+    appointment.status,
+    matchedProposal?.status,
   );
 
   return (
@@ -237,7 +277,7 @@ export default function MandorPesananDetailPage() {
 
             <ReadonlyInput
               label="Tanggal"
-              value={formatDate(appointment.date)}
+              value={formatDateId(appointment.date, "long")}
             />
             <ReadonlyInput label="Waktu" value={appointment.time} />
 
@@ -304,7 +344,7 @@ export default function MandorPesananDetailPage() {
                 </span>
 
                 <Link
-                  href={`/dashboard/mandor/pesanan/${id}/target`}
+                  href={`/dashboard/mandor/pesanan/${id}/target?clientId=${appointment.client_id}&foremanId=${appointment.foreman_id}`}
                   className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-[var(--orange-dark)]"
                 >
                   Buat Proposal
@@ -335,11 +375,34 @@ export default function MandorPesananDetailPage() {
                 </span>
 
                 <Link
-                  href={`/dashboard/mandor/projects/${id}`}
+                  href="/dashboard/mandor/projects"
                   className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white transition-colors hover:bg-[var(--orange-dark)]"
                 >
                   Masuk Proyek
                 </Link>
+              </div>
+            )}
+
+            {currentPhase === "completed" && (
+              <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
+                <span className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white">
+                  Selesai
+                </span>
+
+                <Link
+                  href="/dashboard/mandor/projects"
+                  className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white text-[0.938rem] font-semibold leading-[1.375rem] text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+                >
+                  Lihat Proyek
+                </Link>
+              </div>
+            )}
+
+            {currentPhase === "rejected" && (
+              <div className="mt-[0.25rem] flex flex-col items-center gap-[0.625rem] md:col-span-2">
+                <span className="inline-flex h-[2.5rem] w-full max-w-[18rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] text-[0.938rem] font-semibold leading-[1.375rem] text-white">
+                  Ditolak
+                </span>
               </div>
             )}
           </form>

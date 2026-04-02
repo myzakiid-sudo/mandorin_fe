@@ -2,55 +2,63 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
+import { TableQueryStateRows } from "@/components/ui/table-query-state-rows";
+import { useAuth } from "@/context/auth-context";
+import { getProjects, ProjectAuthError, type Project } from "@/lib/project-api";
+import { formatCurrencyIdr, formatDateId } from "@/lib/utils";
+import { useAsyncQuery } from "@/hooks/use-async-query";
 
 type ProjectTab = "berlangsung" | "selesai";
-
-type MandorProject = {
-  id: number;
-  clientName: string;
-  projectName: string;
-  date: string;
-  budget: string;
-  image: string;
-};
-
-const ongoingProjects: MandorProject[] = [
-  {
-    id: 1,
-    clientName: "Rio Prasetya",
-    projectName: "Pembangunan Rumah Tinggal",
-    date: "23/10/26",
-    budget: "Rp.300,000,000",
-    image: "/images/mandor/mandor-rio prasetyaa.png",
-  },
-];
-
-const completedProjects: MandorProject[] = [
-  {
-    id: 1,
-    clientName: "Rio Prasetya",
-    projectName: "Pembangunan Rumah Tinggal",
-    date: "10/6/26",
-    budget: "Rp.15,000,000",
-    image: "/images/mandor/mandor-rio prasetyaa.png",
-  },
-];
 
 const tabLabel: Record<ProjectTab, string> = {
   berlangsung: "Berlangsung",
   selesai: "Selesai",
 };
 
+const isCompletedProject = (status: string) =>
+  /selesai|finish|done/i.test(status);
+
 export default function MandorProjectsPage() {
+  const { authSession, clearSession } = useAuth();
   const [activeTab, setActiveTab] = useState<ProjectTab>("berlangsung");
 
+  const handleAuthError = useCallback(() => {
+    clearSession();
+  }, [clearSession]);
+
+  const {
+    data: projects,
+    loading,
+    error,
+  } = useAsyncQuery<Project[]>({
+    initialData: [],
+    deps: [authSession?.userId],
+    enabled: Boolean(authSession?.userId),
+    queryFn: async () => getProjects(authSession?.userId),
+    mapError: (fetchError) => {
+      if (fetchError instanceof ProjectAuthError) {
+        handleAuthError();
+        return "Sesi login berakhir. Silakan login ulang.";
+      }
+
+      return fetchError instanceof Error
+        ? fetchError.message
+        : "Gagal memuat daftar proyek.";
+    },
+  });
+
   const projectList = useMemo(
-    () => (activeTab === "berlangsung" ? ongoingProjects : completedProjects),
-    [activeTab],
+    () =>
+      projects.filter((project) =>
+        activeTab === "berlangsung"
+          ? !isCompletedProject(project.status)
+          : isCompletedProject(project.status),
+      ),
+    [activeTab, projects],
   );
 
   return (
@@ -105,6 +113,15 @@ export default function MandorProjectsPage() {
                 </thead>
 
                 <tbody>
+                  <TableQueryStateRows
+                    loading={loading}
+                    error={error}
+                    isEmpty={!projectList.length}
+                    colSpan={4}
+                    loadingMessage="Memuat daftar proyek..."
+                    emptyMessage="Belum ada data proyek pada tab ini."
+                  />
+
                   {projectList.map((project) => (
                     <tr
                       key={`${activeTab}-${project.id}`}
@@ -113,30 +130,35 @@ export default function MandorProjectsPage() {
                       <td className="px-[1rem] py-[0.5rem]">
                         <div className="flex items-center gap-[0.75rem]">
                           <Image
-                            src={project.image}
-                            alt={project.clientName}
+                            src={
+                              project.clients?.avatar ||
+                              "/images/logo-mandorin.svg"
+                            }
+                            alt={project.clients?.name || "Klien"}
                             width={44}
                             height={44}
                             className="h-[2.75rem] w-[2.75rem] rounded-full object-cover"
+                            unoptimized
                           />
 
                           <div>
                             <p className="text-[1.125rem] font-medium leading-[1.75rem] text-[var(--text-black)]">
-                              {project.clientName}
+                              {project.clients?.name ||
+                                `Klien #${project.client_id}`}
                             </p>
                             <p className="text-[0.875rem] leading-[1.25rem] text-[var(--text-muted)]">
-                              {project.projectName}
+                              {project.title}
                             </p>
                           </div>
                         </div>
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
-                        {project.date}
+                        {formatDateId(project.created_at || project.deadline)}
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
-                        {project.budget}
+                        {formatCurrencyIdr(Number(project.budget) || 0)}
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-right">

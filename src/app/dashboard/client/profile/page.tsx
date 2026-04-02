@@ -104,12 +104,11 @@ export default function ClientProfilePage() {
         }
 
         setProfile(payload.data);
-      } catch (error) {
+      } catch {
         if (controller.signal.aborted) {
           return;
         }
 
-        console.error("Gagal memuat profil client:", error);
         setProfile(null);
         setErrorMessage(
           "Terjadi kesalahan jaringan saat memuat profil client.",

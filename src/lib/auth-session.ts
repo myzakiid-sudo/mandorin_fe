@@ -43,8 +43,16 @@ const resolveRole = (
   value: unknown,
   fallbackRole?: UserRole,
 ): UserRole | null => {
-  if (value === "client" || value === "mandor") {
-    return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized === "client" || normalized === "clients") {
+      return "client";
+    }
+
+    if (normalized === "mandor" || normalized === "foreman") {
+      return "mandor";
+    }
   }
 
   return fallbackRole ?? null;

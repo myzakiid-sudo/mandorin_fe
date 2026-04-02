@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth-context";
+import { API_BASE_URL } from "@/lib/api-config";
 import { fetchWithAuth } from "@/lib/auth-fetch";
 
-const LOGOUT_ENDPOINT = "https://be-internship.bccdev.id/dzaki/api/auth/logout";
+const LOGOUT_ENDPOINT = `${API_BASE_URL}/auth/logout`;
 
 type LogoutResponse = {
   success?: boolean;
@@ -95,7 +96,6 @@ export default function PublicNavbar() {
     try {
       const response = await fetchWithAuth(LOGOUT_ENDPOINT, {
         method: "POST",
-        credentials: "include",
       });
 
       let data: LogoutResponse | null = null;
@@ -108,15 +108,9 @@ export default function PublicNavbar() {
 
       if (!response.ok || data?.success === false) {
         // Backend may not expose logout endpoint yet (404). Keep local logout flow silent.
-        if (response.status !== 404) {
-          console.warn("Logout API returned non-success status", {
-            status: response.status,
-            message: data?.message,
-          });
-        }
       }
-    } catch (error) {
-      console.error("Logout request failed:", error);
+    } catch {
+      // Keep local logout flow resilient even if API call fails.
     } finally {
       clearSession();
       setIsProfileMenuOpen(false);
@@ -147,7 +141,7 @@ export default function PublicNavbar() {
             alt="MandorIn"
             width={40}
             height={40}
-            className="object-contain"
+            className="h-10 w-10 object-contain"
             priority
           />
           <span className="text-[1.75rem] font-semibold text-[var(--orange-normal)]">

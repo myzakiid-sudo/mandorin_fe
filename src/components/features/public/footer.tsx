@@ -19,7 +19,7 @@ export default function PublicFooter() {
                 alt="MandorIn"
                 width={48}
                 height={48}
-                className="object-contain"
+                className="h-12 w-12 object-contain"
               />
             </div>
 

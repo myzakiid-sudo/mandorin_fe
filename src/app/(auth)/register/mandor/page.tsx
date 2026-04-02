@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import UploadPortfolioModal from "@/components/features/auth/upload-portfolio-modal";
 import { useAuth } from "@/context/auth-context";
+import { API_BASE_URL } from "@/lib/api-config";
+import { USE_AUTH_CREDENTIALS } from "@/lib/auth-fetch";
 import { extractAuthSession } from "@/lib/auth-session";
 
-const REGISTER_ENDPOINT =
-  "https://be-internship.bccdev.id/dzaki/api/auth/register/foreman";
+const REGISTER_ENDPOINT = `${API_BASE_URL}/auth/register/foreman`;
 
 type RegisterApiResponse = {
   success?: boolean;
@@ -131,7 +132,7 @@ export default function RegisterMandorPage() {
     try {
       const response = await fetch(REGISTER_ENDPOINT, {
         method: "POST",
-        credentials: "include",
+        ...(USE_AUTH_CREDENTIALS ? { credentials: "include" as const } : {}),
         body: formData,
       });
 
@@ -157,8 +158,7 @@ export default function RegisterMandorPage() {
 
       alert("Registrasi Mandor Berhasil!");
       router.push("/dashboard/mandor/projects");
-    } catch (error) {
-      console.error("Terjadi masalah saat register mandor:", error);
+    } catch {
       alert("Terjadi kesalahan jaringan.");
     }
   };
@@ -172,7 +172,7 @@ export default function RegisterMandorPage() {
             alt="MandorIn"
             width={44}
             height={44}
-            className="object-contain"
+            className="h-11 w-11 object-contain"
             priority
           />
           <span className="text-[1.5rem] font-semibold text-[var(--orange-normal)]">

@@ -3,9 +3,23 @@ import { requestJson, type ApiResponse } from "@/lib/auth-fetch";
 
 export type AppointmentStatus =
   | "MENUNGGU PERSUTUJUAN"
+  | "MENUNGGU PERSETUJUAN"
   | "DISETUJUI"
   | "DITOLAK"
-  | "SELESAI";
+  | "SELESAI"
+  | string;
+
+export const normalizeAppointmentStatus = (status?: string) =>
+  String(status ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, " ")
+    .replace("PERSUTUJUAN", "PERSETUJUAN");
+
+export const isAppointmentCompletedStatus = (status?: string) => {
+  const normalized = normalizeAppointmentStatus(status);
+  return normalized === "SELESAI" || normalized === "DITOLAK";
+};
 
 export type Appointment = {
   id: number;
@@ -36,12 +50,11 @@ const isNoAppointmentMessage = (message?: string) =>
 
 const isAccessTokenInvalidMessage = (message?: string) =>
   Boolean(
-    message &&
-    /access token was invalid|token.*invalid|unauthorized/i.test(message),
+    message && /access token was invalid|token.*invalid|jwt/i.test(message),
   );
 
 const isAuthFailure = (status: number, message?: string) =>
-  status === 401 || status === 403 || isAccessTokenInvalidMessage(message);
+  status === 401 || isAccessTokenInvalidMessage(message);
 
 export async function getAppointments(): Promise<Appointment[]> {
   const { response, payload } = await requestJson<ApiListResponse>(
@@ -49,7 +62,6 @@ export async function getAppointments(): Promise<Appointment[]> {
     {
       auth: true,
       method: "GET",
-      credentials: "include",
       headers: {
         Accept: "application/json",
       },
@@ -81,7 +93,6 @@ export async function getAppointmentById(id: string): Promise<Appointment> {
     {
       auth: true,
       method: "GET",
-      credentials: "include",
       headers: {
         Accept: "application/json",
       },
@@ -111,7 +122,6 @@ export async function createAppointment(input: {
     {
       auth: true,
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -146,7 +156,6 @@ export async function updateAppointmentStatus(
     {
       auth: true,
       method: "PATCH",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

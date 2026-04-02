@@ -59,15 +59,14 @@ export default function HeroSection() {
             {/* Kotak orange aksen di belakang foto */}
             <div className="absolute bottom-0 right-0 z-0 h-4/5 w-4/5 rounded-tl-[2.5rem] bg-[var(--orange-light-active)]" />
 
-            <div className="relative z-10 w-full max-w-[540px]">
+            <div className="relative z-10 w-full max-w-[540px] aspect-[9/8]">
               <Image
                 src="/images/beranda/beranda-hero.png"
                 alt="Tim mandor profesional"
-                width={540}
-                height={480}
+                fill
                 sizes="(max-width: 1024px) 100vw, 540px"
                 priority
-                className="relative z-10 h-auto w-full object-contain"
+                className="relative z-10 object-contain"
               />
             </div>
           </div>

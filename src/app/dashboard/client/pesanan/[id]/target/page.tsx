@@ -1,10 +1,25 @@
 "use client";
 
-import React from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import PublicNavbar from "@/components/features/public/navbar";
 import PublicFooter from "@/components/features/public/footer";
-import { setMandorOrderFlow } from "@/lib/mandor-order-flow";
+import { useAuth } from "@/context/auth-context";
+import {
+  payProposal,
+  ProposalForbiddenError,
+  getProposalById,
+  isProposalApprovedStatus,
+  isProposalRejectedStatus,
+  normalizeProposalStatus,
+  ProposalAuthError,
+  type Proposal,
+  updateProposalStatus,
+} from "@/lib/proposal-api";
+import { formatCurrencyIdr, formatDateId } from "@/lib/utils";
+
+const DEV_SKIP_MIDTRANS =
+  process.env.NEXT_PUBLIC_DEV_SKIP_MIDTRANS?.trim().toLowerCase() === "true";
 
 function ReadonlyTargetInput({
   label,
@@ -43,33 +58,246 @@ function ReadonlyTargetInput({
 
 export default function ClientTargetPengerjaanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
+  const { clearSession } = useAuth();
+  const orderId = String(params?.id ?? "");
+  const proposalIdFromQuery = searchParams.get("proposalId")?.trim() ?? "";
+  const proposalId = proposalIdFromQuery || orderId;
+  const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+  const [isSavingDecision, setIsSavingDecision] = useState(false);
+  const [isReadyToPay, setIsReadyToPay] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [isDevBypassed, setIsDevBypassed] = useState(false);
 
-  const handleApproveProposal = () => {
-    const orderId = String(params?.id ?? "");
-    if (orderId) {
-      setMandorOrderFlow(orderId, {
-        approved: true,
-        proposalSubmitted: true,
-        clientApproved: true,
-      });
+  const isProposalApproved = isProposalApprovedStatus(proposal?.status);
+  const isProposalRejected = isProposalRejectedStatus(proposal?.status);
+  const isDecisionFinal = isProposalApproved || isProposalRejected;
+  const canProceedToProjects =
+    isProposalApproved || (DEV_SKIP_MIDTRANS && isDevBypassed);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadProposal = async () => {
+      setLoading(true);
+      setErrorMessage("");
+
+      if (!proposalId) {
+        setErrorMessage("ID proposal tidak valid.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getProposalById(proposalId);
+        if (isCancelled) {
+          return;
+        }
+
+        setProposal(data);
+      } catch (error) {
+        if (isCancelled) {
+          return;
+        }
+
+        if (error instanceof ProposalAuthError) {
+          clearSession();
+          router.replace("/login");
+          return;
+        }
+
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Gagal memuat detail proposal.",
+        );
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProposal();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [clearSession, proposalId, router]);
+
+  const handleApproveProposal = async () => {
+    if (!orderId || !proposal || isSavingDecision || isDecisionFinal) {
+      return;
     }
 
-    router.push("/dashboard/client/projects");
+    setIsSavingDecision(true);
+    setErrorMessage("");
+    setInfoMessage("");
+    setIsReadyToPay(true);
+    setIsSavingDecision(false);
   };
 
-  const handleRejectProposal = () => {
-    const orderId = String(params?.id ?? "");
-    if (orderId) {
-      setMandorOrderFlow(orderId, {
-        approved: true,
-        proposalSubmitted: false,
-        clientApproved: false,
-      });
+  const handlePayProposal = async () => {
+    if (!proposal || isPaying || isDecisionFinal || !isReadyToPay) {
+      return;
     }
 
-    router.push("/dashboard/client/pesanan");
+    setIsPaying(true);
+    setErrorMessage("");
+    setInfoMessage("");
+
+    if (DEV_SKIP_MIDTRANS) {
+      setIsDevBypassed(true);
+      setInfoMessage(
+        "Mode developer aktif: pembayaran Midtrans dilewati untuk testing alur lanjutan. Status proposal backend tidak diubah pada mode ini.",
+      );
+
+      setIsPaying(false);
+      return;
+    }
+
+    try {
+      const paymentResult = await payProposal(String(proposal.id));
+
+      if (
+        paymentResult.status &&
+        isProposalApprovedStatus(paymentResult.status)
+      ) {
+        setProposal((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: normalizeProposalStatus(
+                  paymentResult.status ?? undefined,
+                ),
+              }
+            : prev,
+        );
+      }
+
+      if (paymentResult.paymentUrl) {
+        window.location.href = paymentResult.paymentUrl;
+        return;
+      }
+
+      const refreshedProposal = await getProposalById(String(proposal.id));
+      setProposal(refreshedProposal);
+
+      if (!isProposalApprovedStatus(refreshedProposal.status)) {
+        const orderInfo = paymentResult.orderId
+          ? ` (Order ID: ${paymentResult.orderId})`
+          : "";
+        setErrorMessage(
+          `Sesi pembayaran berhasil dibuat${orderInfo}, tetapi URL Midtrans belum tersedia dari API. Hubungi backend untuk memastikan field payment_url dikirim pada respons /proposals/:id/pay.`,
+        );
+      }
+    } catch (error) {
+      if (error instanceof ProposalAuthError) {
+        setErrorMessage(
+          error.message ||
+            "Sesi login bermasalah untuk aksi pembayaran. Silakan login ulang lalu coba lagi.",
+        );
+        return;
+      }
+
+      if (error instanceof ProposalForbiddenError) {
+        setErrorMessage(
+          error.message || "Aksi pembayaran tidak diizinkan untuk akun ini.",
+        );
+        return;
+      }
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Gagal membuat sesi pembayaran Midtrans.",
+      );
+    } finally {
+      setIsPaying(false);
+    }
   };
+
+  const handleRejectProposal = async () => {
+    if (!orderId || !proposal || isSavingDecision || isDecisionFinal) {
+      return;
+    }
+
+    setIsSavingDecision(true);
+    setErrorMessage("");
+
+    try {
+      const updated = await updateProposalStatus(
+        String(proposal.id),
+        "DITOLAK",
+      );
+      setProposal(updated);
+
+      router.push("/dashboard/client/pesanan");
+    } catch (error) {
+      if (error instanceof ProposalAuthError) {
+        setErrorMessage(
+          error.message ||
+            "Sesi login bermasalah untuk aksi ini. Silakan login ulang lalu coba lagi.",
+        );
+        return;
+      }
+
+      if (error instanceof ProposalForbiddenError) {
+        setErrorMessage(
+          error.message ||
+            "Aksi tidak diizinkan. Pastikan Anda login sebagai client pemilik proposal.",
+        );
+        return;
+      }
+
+      setErrorMessage(
+        error instanceof Error ? error.message : "Gagal menolak proposal.",
+      );
+    } finally {
+      setIsSavingDecision(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f3f3f3]">
+        <PublicNavbar />
+        <main className="mx-auto w-full max-w-[90rem] flex-1 px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
+          <section className="mx-auto max-w-[65rem] rounded-[1rem] border border-[var(--black-light)] bg-white p-6 text-center text-[var(--text-muted)]">
+            Memuat data proposal...
+          </section>
+        </main>
+        <PublicFooter />
+      </div>
+    );
+  }
+
+  if (!proposal) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f3f3f3]">
+        <PublicNavbar />
+        <main className="mx-auto w-full max-w-[90rem] flex-1 px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
+          <section className="mx-auto max-w-[65rem] rounded-[1rem] border border-[var(--black-light)] bg-white p-6 text-center">
+            <p className="text-[var(--red-normal)]">
+              {errorMessage || "Data proposal tidak ditemukan."}
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard/client/pesanan")}
+              className="mt-5 inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+            >
+              Kembali ke Pesanan
+            </button>
+          </section>
+        </main>
+        <PublicFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f3f3f3]">
@@ -82,86 +310,119 @@ export default function ClientTargetPengerjaanPage() {
           </h1>
 
           <div className="mt-[2rem] flex flex-col gap-[1.25rem]">
-            <ReadonlyTargetInput
-              label="Nama Proyek"
-              value="Renovasi Dapur Modern Open Space - Kediaman Rico"
-            />
+            <ReadonlyTargetInput label="Nama Proyek" value={proposal.title} />
 
             <div className="grid grid-cols-1 gap-[1.25rem] md:grid-cols-2">
-              <ReadonlyTargetInput label="Tanggal Survei" value="15/03/2026" />
               <ReadonlyTargetInput
                 label="Target Tanggal Selesai"
-                value="15/05/2026"
+                value={formatDateId(proposal.deadline, "long")}
+              />
+              <ReadonlyTargetInput
+                label="Budget Proposal"
+                value={formatCurrencyIdr(Number(proposal.budget) || 0)}
               />
             </div>
 
             <ReadonlyTargetInput
               label="Alamat Lengkap Proyek"
-              value="Jl. Simpang Borobudur No. 45, Kec. Lowokwaru, Kota Malang"
+              value={proposal.location}
+            />
+
+            <ReadonlyTargetInput
+              label="Bidang Pekerjaan"
+              value={proposal.field}
             />
 
             <ReadonlyTargetInput
               label="Deskripsi Pekerjaan"
               type="textarea"
-              rows={2}
-              value="Transformasi total area dapur meliputi pembongkaran kabinet lama, penggantian lantai, instalasi ulang jalur air dan listrik, serta pemasangan kitchen set kustom dengan material HPL premium."
+              rows={5}
+              value={proposal.content}
             />
 
-            <div className="mt-4 flex flex-col gap-[1.25rem]">
-              <h3 className="text-[1.125rem] font-semibold text-[var(--text-black)]">
-                Urutan Tahapan
-              </h3>
-              <ReadonlyTargetInput
-                label="Tahapan 1"
-                value="Pembongkaran area dapur lama dan pembersihan puing material."
-              />
-              <ReadonlyTargetInput
-                label="Tahapan 2"
-                value="Instalasi jalur pipa air baru (wastafel) dan titik kelistrikan (oven/kulkas)."
-              />
-              <ReadonlyTargetInput
-                label="Tahapan 3"
-                value="Pengerjaan lantai granit dan finishing cat dinding bagian belakang."
-              />
-              <ReadonlyTargetInput
-                label="Tahapan 4"
-                value="Pemasangan kabinet kitchen set bawah, top table, dan kabinet gantung."
-              />
-              <ReadonlyTargetInput
-                label="Tahapan 5"
-                value="Finishing akhir, pemasangan lampu LED, dan pembersihan menyeluruh."
-              />
-              <ReadonlyTargetInput
-                label="Syarat Tahapan"
-                type="textarea"
-                rows={2}
-                value="Pemasangan kabinet (Tahapan 4) hanya dapat dilakukan setelah instalasi listrik dan lantai (Tahapan 2 & 3) selesai 100% untuk menghindari kerusakan material."
-              />
-            </div>
+            <ReadonlyTargetInput
+              label="Foto Proposal"
+              value={proposal.photo || "-"}
+            />
 
             <p className="mt-2 text-[0.75rem] leading-[1.125rem] text-[var(--text-muted)] md:text-[0.875rem] mb-6 border-b pb-8 border-transparent">
-              Menyimpan formulir ini berarti menetapkan target pengerjaan yang
-              akan dipantau secara berkala melalui laporan progres harian di
-              aplikasi Mandorin.
+              Setelah klik Setuju, lanjutkan dengan tombol Bayar untuk membuka
+              halaman Midtrans.
+              {DEV_SKIP_MIDTRANS
+                ? " Mode developer aktif: tombol Bayar akan melewati Midtrans."
+                : ""}
             </p>
+
+            {infoMessage ? (
+              <p className="text-[0.875rem] text-[var(--green-normal)]">
+                {infoMessage}
+              </p>
+            ) : null}
+
+            {errorMessage ? (
+              <p className="text-[0.875rem] text-[var(--red-normal)]">
+                {errorMessage}
+              </p>
+            ) : null}
 
             <div className="flex flex-col items-center gap-3 md:flex-row md:justify-center">
               <button
                 type="button"
                 onClick={handleApproveProposal}
-                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--green-dark)]"
+                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--green-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                disabled={isSavingDecision || isDecisionFinal}
               >
-                Setuju
+                {isSavingDecision
+                  ? "Menyimpan..."
+                  : isDecisionFinal
+                    ? "Keputusan Tersimpan"
+                    : isReadyToPay
+                      ? "Disetujui"
+                      : "Setuju"}
               </button>
 
               <button
                 type="button"
                 onClick={handleRejectProposal}
-                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--red-dark)]"
+                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--red-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                disabled={isSavingDecision || isDecisionFinal}
               >
-                Tolak
+                {isSavingDecision
+                  ? "Menyimpan..."
+                  : isDecisionFinal
+                    ? "Keputusan Tersimpan"
+                    : "Tolak"}
               </button>
             </div>
+
+            {!isProposalApproved && !isProposalRejected ? (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={handlePayProposal}
+                  className="inline-flex h-[2.75rem] w-full max-w-[23rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-bg)] disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                  disabled={!isReadyToPay || isPaying || isSavingDecision}
+                >
+                  {isPaying
+                    ? "Membuat Pembayaran..."
+                    : DEV_SKIP_MIDTRANS
+                      ? "Lewati Pembayaran (Dev)"
+                      : "Bayar via Midtrans"}
+                </button>
+              </div>
+            ) : null}
+
+            {canProceedToProjects ? (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => router.push("/dashboard/client/projects")}
+                  className="inline-flex h-[2.75rem] w-full max-w-[23rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white px-5 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+                >
+                  Lanjut ke Proyek Saya
+                </button>
+              </div>
+            ) : null}
           </div>
         </section>
       </main>

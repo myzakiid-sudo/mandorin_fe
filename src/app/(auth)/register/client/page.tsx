@@ -4,10 +4,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
+import { API_BASE_URL } from "@/lib/api-config";
+import { USE_AUTH_CREDENTIALS } from "@/lib/auth-fetch";
 import { extractAuthSession } from "@/lib/auth-session";
 
-const REGISTER_ENDPOINT =
-  "https://be-internship.bccdev.id/dzaki/api/auth/register/clients";
+const REGISTER_ENDPOINT = `${API_BASE_URL}/auth/register/clients`;
 
 type RegisterApiResponse = {
   success?: boolean;
@@ -15,12 +16,16 @@ type RegisterApiResponse = {
   data?: Record<string, unknown>;
 };
 
-const formFields = [
+const formFields: Array<{
+  name: string;
+  label: string;
+  type: "text" | "password" | "tel" | "email" | "date" | "select";
+}> = [
   { name: "name", label: "Nama Lengkap", type: "text" },
   { name: "nick", label: "Nama Panggilan", type: "text" },
   { name: "birth_place", label: "Tempat Lahir", type: "text" },
   { name: "birth_date", label: "Tanggal Lahir", type: "date" },
-  { name: "sex", label: "Jenis Kelamin", type: "text" },
+  { name: "sex", label: "Jenis Kelamin", type: "select" },
   { name: "address", label: "Alamat Sesuai KTP", type: "text" },
   { name: "email", label: "Alamat Email", type: "email" },
   { name: "phone", label: "Nomor HP", type: "tel" },
@@ -97,7 +102,7 @@ export default function RegisterClientPage() {
     try {
       const response = await fetch(REGISTER_ENDPOINT, {
         method: "POST",
-        credentials: "include",
+        ...(USE_AUTH_CREDENTIALS ? { credentials: "include" as const } : {}),
         body: formData,
       });
 
@@ -123,8 +128,7 @@ export default function RegisterClientPage() {
 
       alert("Registrasi Berhasil!");
       router.push("/beranda");
-    } catch (error) {
-      console.error("Terjadi masalah saat register:", error);
+    } catch {
       alert("Terjadi kesalahan jaringan.");
     }
   };
@@ -138,7 +142,7 @@ export default function RegisterClientPage() {
             alt="MandorIn"
             width={44}
             height={44}
-            className="object-contain"
+            className="h-11 w-11 object-contain"
             priority
           />
           <span className="text-[1.5rem] font-semibold text-[var(--orange-normal)]">
@@ -192,14 +196,30 @@ export default function RegisterClientPage() {
                   >
                     {field.label}
                   </label>
-                  <input
-                    id={field.name}
-                    name={field.name}
-                    type={field.type}
-                    max={field.name === "birth_date" ? todayDate : undefined}
-                    required
-                    className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
-                  />
+                  {field.type === "select" ? (
+                    <select
+                      id={field.name}
+                      name={field.name}
+                      required
+                      defaultValue=""
+                      className="h-[2.75rem] rounded-md border border-[var(--black-light)] bg-white px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
+                    >
+                      <option value="" disabled>
+                        Pilih jenis kelamin
+                      </option>
+                      <option value="male">Laki-laki</option>
+                      <option value="female">Perempuan</option>
+                    </select>
+                  ) : (
+                    <input
+                      id={field.name}
+                      name={field.name}
+                      type={field.type}
+                      max={field.name === "birth_date" ? todayDate : undefined}
+                      required
+                      className="h-[2.75rem] rounded-md border border-[var(--black-light)] px-3 text-sm text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)]"
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -218,7 +238,7 @@ export default function RegisterClientPage() {
                   : "border border-[var(--btn-outline-border)] bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)]"
               }`}
             >
-              Kirim
+              Daftar Client
             </button>
           </form>
         </section>

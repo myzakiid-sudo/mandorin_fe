@@ -19,7 +19,6 @@ export async function getClientDisplayByUserId(userId: string) {
     {
       auth: true,
       method: "GET",
-      credentials: "include",
       headers: {
         Accept: "application/json",
       },

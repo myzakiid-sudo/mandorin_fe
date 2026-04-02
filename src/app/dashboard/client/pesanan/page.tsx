@@ -7,40 +7,46 @@ import { useMemo, useCallback, useState } from "react";
 
 import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
-import { AppButton } from "@/components/ui/app-button";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
-import { TableStateRow } from "@/components/ui/table-state-row";
+import { TableQueryStateRows } from "@/components/ui/table-query-state-rows";
 import { useAuth } from "@/context/auth-context";
-import type { Appointment } from "@/lib/appointment-api";
+import {
+  isAppointmentCompletedStatus,
+  normalizeAppointmentStatus,
+  type Appointment,
+} from "@/lib/appointment-api";
 import { getForemanById } from "@/lib/foreman-api";
-import { resolveMandorOrderPhase } from "@/lib/mandor-order-flow";
+import {
+  type Proposal,
+  normalizeProposalStatus,
+  resolveProposalForOrder,
+} from "@/lib/proposal-api";
+import { formatDateId } from "@/lib/utils";
 import { useAppointments } from "@/hooks/use-appointments";
 import { useAsyncQuery } from "@/hooks/use-async-query";
+import { useProposals } from "@/hooks/use-proposals";
 
 type OrderTab = "berlangsung" | "selesai";
 
 const isCompletedStatus = (status: Appointment["status"]) =>
-  status === "SELESAI" || status === "DITOLAK";
+  isAppointmentCompletedStatus(status);
 
-const formatDate = (rawDate: string) => {
-  const parsed = new Date(rawDate);
+const getStatusLabel = (status: Appointment["status"]) => {
+  const normalized = normalizeAppointmentStatus(status);
 
-  if (Number.isNaN(parsed.getTime())) {
-    return rawDate;
+  if (normalized === "DISETUJUI") {
+    return "Disetujui";
   }
 
-  return parsed.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  });
-};
+  if (normalized === "DITOLAK") {
+    return "Ditolak";
+  }
 
-const statusLabel: Record<Appointment["status"], string> = {
-  "MENUNGGU PERSUTUJUAN": "Menunggu",
-  DISETUJUI: "Disetujui",
-  DITOLAK: "Ditolak",
-  SELESAI: "Selesai",
+  if (normalized === "SELESAI") {
+    return "Selesai";
+  }
+
+  return "Menunggu";
 };
 
 const ORDER_TAB_OPTIONS: Array<{ value: OrderTab; label: string }> = [
@@ -49,15 +55,51 @@ const ORDER_TAB_OPTIONS: Array<{ value: OrderTab; label: string }> = [
 ];
 
 const getStatusClassName = (status: Appointment["status"]) => {
-  if (status === "DISETUJUI") {
+  const normalized = normalizeAppointmentStatus(status);
+
+  if (normalized === "DISETUJUI") {
     return "bg-[var(--green-normal)] text-[var(--text-white)]";
   }
 
-  if (status === "DITOLAK") {
+  if (normalized === "DITOLAK") {
     return "bg-[var(--red-normal)] text-[var(--text-white)]";
   }
 
   return "bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)]";
+};
+
+const getProposalStatusMeta = (status?: string) => {
+  const normalizedStatus = normalizeProposalStatus(status);
+
+  if (normalizedStatus === "DIBAYAR") {
+    return {
+      label: "Dibayar",
+      className: "bg-[var(--blue-normal-active)] text-[var(--text-white)]",
+    };
+  }
+
+  if (normalizedStatus === "DISETUJUI") {
+    return {
+      label: "Disetujui",
+      className: "bg-[var(--green-normal)] text-[var(--text-white)]",
+    };
+  }
+
+  if (normalizedStatus === "DITOLAK") {
+    return {
+      label: "Ditolak",
+      className: "bg-[var(--red-normal)] text-[var(--text-white)]",
+    };
+  }
+
+  if (normalizedStatus === "MENUNGGU PERSETUJUAN") {
+    return {
+      label: "Menunggu",
+      className: "bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)]",
+    };
+  }
+
+  return null;
 };
 
 export default function ClientPesananPage() {
@@ -115,6 +157,18 @@ export default function ClientPesananPage() {
     },
   });
 
+  const { data: proposals } = useProposals({ onAuthError: handleAuthError });
+
+  const proposalByOrder = useMemo(() => {
+    const mapping: Record<string, Proposal | null> = {};
+
+    for (const order of appointments) {
+      mapping[String(order.id)] = resolveProposalForOrder(order, proposals);
+    }
+
+    return mapping;
+  }, [appointments, proposals]);
+
   const orderList = useMemo(
     () =>
       appointments.filter((appointment) =>
@@ -163,27 +217,14 @@ export default function ClientPesananPage() {
                 </thead>
 
                 <tbody>
-                  {loading ? (
-                    <TableStateRow
-                      colSpan={4}
-                      message="Memuat data pesanan..."
-                    />
-                  ) : null}
-
-                  {!loading && errorMessage ? (
-                    <TableStateRow
-                      colSpan={4}
-                      tone="danger"
-                      message={errorMessage}
-                    />
-                  ) : null}
-
-                  {!loading && !errorMessage && !orderList.length ? (
-                    <TableStateRow
-                      colSpan={4}
-                      message="Belum ada data pesanan."
-                    />
-                  ) : null}
+                  <TableQueryStateRows
+                    loading={loading}
+                    error={errorMessage}
+                    isEmpty={!orderList.length}
+                    colSpan={4}
+                    loadingMessage="Memuat data pesanan..."
+                    emptyMessage="Belum ada data pesanan."
+                  />
 
                   {!loading &&
                     !errorMessage &&
@@ -194,14 +235,15 @@ export default function ClientPesananPage() {
                       const foremanAvatar =
                         foremanSummary?.avatar || "/images/logo-mandorin.svg";
 
-                      const phase = resolveMandorOrderPhase(
-                        String(order.id),
-                        order.status === "DISETUJUI" ? "approved" : "pending",
+                      const matchedProposal = proposalByOrder[String(order.id)];
+                      const proposalId = matchedProposal
+                        ? String(matchedProposal.id)
+                        : "";
+                      const proposalStatusMeta = getProposalStatusMeta(
+                        matchedProposal?.status,
                       );
                       const canCheckProposal =
-                        order.status === "DISETUJUI" &&
-                        (phase === "proposal_submitted" ||
-                          phase === "client_approved");
+                        order.status === "DISETUJUI" && Boolean(proposalId);
 
                       return (
                         <tr
@@ -232,30 +274,40 @@ export default function ClientPesananPage() {
                           </td>
 
                           <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
-                            {formatDate(order.date)}
+                            {formatDateId(order.date)}
                           </td>
 
                           <td className="px-[1rem] py-[0.5rem]">
                             <span
                               className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] ${getStatusClassName(order.status)}`}
                             >
-                              {statusLabel[order.status]}
+                              {getStatusLabel(order.status)}
                             </span>
                           </td>
 
                           <td className="px-[1rem] py-[0.5rem] text-right">
-                            {canCheckProposal ? (
-                              <Link
-                                href={`/dashboard/client/pesanan/${order.id}/target`}
-                                className="inline-flex min-w-[7.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[0.875rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
-                              >
-                                Cek Proposal
-                              </Link>
-                            ) : (
-                              <AppButton type="button" disabled variant="ghost">
-                                Cek Proposal
-                              </AppButton>
-                            )}
+                            <div className="flex items-center justify-end gap-2">
+                              {proposalStatusMeta ? (
+                                <span
+                                  className={`inline-flex h-[2.25rem] min-w-[6.25rem] items-center justify-center rounded-[0.5rem] px-[0.75rem] text-[0.813rem] font-semibold ${proposalStatusMeta.className}`}
+                                >
+                                  {proposalStatusMeta.label}
+                                </span>
+                              ) : null}
+
+                              {canCheckProposal ? (
+                                <Link
+                                  href={`/dashboard/client/pesanan/${order.id}/target${proposalId ? `?proposalId=${proposalId}` : ""}`}
+                                  className="inline-flex h-[2.5rem] min-w-[7.5rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[0.875rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                                >
+                                  Cek Proposal
+                                </Link>
+                              ) : (
+                                <span className="inline-flex h-[2.5rem] min-w-[7.5rem] items-center justify-center rounded-[0.5rem] bg-[var(--btn-disabled-bg)] px-[0.875rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--btn-disabled-text)]">
+                                  Cek Proposal
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

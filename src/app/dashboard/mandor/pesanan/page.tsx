@@ -9,42 +9,81 @@ import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 import { AppButton } from "@/components/ui/app-button";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
-import { TableStateRow } from "@/components/ui/table-state-row";
+import { TableQueryStateRows } from "@/components/ui/table-query-state-rows";
 import { useAuth } from "@/context/auth-context";
-import type { Appointment } from "@/lib/appointment-api";
+import {
+  isAppointmentCompletedStatus,
+  normalizeAppointmentStatus,
+  type Appointment,
+} from "@/lib/appointment-api";
 import { getClientDisplayByUserId } from "@/lib/client-api";
 import {
-  type MandorOrderPhase,
-  resolveMandorOrderPhase,
-} from "@/lib/mandor-order-flow";
+  isProposalApprovedStatus,
+  isProposalPendingStatus,
+  resolveProposalForOrder,
+} from "@/lib/proposal-api";
+import { formatDateId } from "@/lib/utils";
 import { useAppointments } from "@/hooks/use-appointments";
 import { useAsyncQuery } from "@/hooks/use-async-query";
+import { useProposals } from "@/hooks/use-proposals";
+
+type MandorOrderPhase =
+  | "pending"
+  | "approved"
+  | "proposal_submitted"
+  | "client_approved"
+  | "completed"
+  | "rejected";
 
 type OrderTab = "berlangsung" | "selesai";
 
 const isCompletedStatus = (status: Appointment["status"]) =>
-  status === "SELESAI" || status === "DITOLAK";
-
-const formatDate = (rawDate: string) => {
-  const parsed = new Date(rawDate);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return rawDate;
-  }
-
-  return parsed.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  });
-};
+  isAppointmentCompletedStatus(status);
 
 const ORDER_TAB_OPTIONS: Array<{ value: OrderTab; label: string }> = [
   { value: "berlangsung", label: "Berlangsung" },
   { value: "selesai", label: "Selesai" },
 ];
 
+const resolvePhaseFromServer = (
+  appointmentStatus: Appointment["status"],
+  proposalStatus?: string,
+): MandorOrderPhase => {
+  const normalizedAppointmentStatus =
+    normalizeAppointmentStatus(appointmentStatus);
+
+  if (normalizedAppointmentStatus === "SELESAI") {
+    return "completed";
+  }
+
+  if (normalizedAppointmentStatus === "DITOLAK") {
+    return "rejected";
+  }
+
+  if (normalizedAppointmentStatus !== "DISETUJUI") {
+    return "pending";
+  }
+
+  if (isProposalApprovedStatus(proposalStatus)) {
+    return "client_approved";
+  }
+
+  if (isProposalPendingStatus(proposalStatus)) {
+    return "proposal_submitted";
+  }
+
+  return "approved";
+};
+
 const getOrderPhaseClassName = (phase: MandorOrderPhase) => {
+  if (phase === "completed") {
+    return "bg-[var(--green-normal)] text-[var(--text-white)]";
+  }
+
+  if (phase === "rejected") {
+    return "bg-[var(--red-normal)] text-[var(--text-white)]";
+  }
+
   if (phase === "approved") {
     return "bg-[var(--green-normal)] text-[var(--text-white)]";
   }
@@ -133,6 +172,8 @@ export default function MandorPesananPage() {
     [clientIds.length, clientLookupRaw],
   );
 
+  const { data: proposals } = useProposals({ onAuthError: handleAuthError });
+
   const orderList = useMemo(
     () =>
       appointments
@@ -142,9 +183,10 @@ export default function MandorPesananPage() {
             : isCompletedStatus(appointment.status),
         )
         .map((order) => {
-          const phase = resolveMandorOrderPhase(
-            String(order.id),
-            order.status === "DISETUJUI" ? "approved" : "pending",
+          const matchedProposal = resolveProposalForOrder(order, proposals);
+          const phase = resolvePhaseFromServer(
+            order.status,
+            matchedProposal?.status,
           );
 
           return {
@@ -152,7 +194,7 @@ export default function MandorPesananPage() {
             phase,
           };
         }),
-    [activeTab, appointments],
+    [activeTab, appointments, proposals],
   );
 
   const statusLabel: Record<MandorOrderPhase, string> = {
@@ -160,6 +202,8 @@ export default function MandorPesananPage() {
     approved: "Disetujui",
     proposal_submitted: "Proposal Dikirim",
     client_approved: "Disetujui Klien",
+    completed: "Selesai",
+    rejected: "Ditolak",
   };
 
   return (
@@ -200,27 +244,14 @@ export default function MandorPesananPage() {
                 </thead>
 
                 <tbody>
-                  {loading ? (
-                    <TableStateRow
-                      colSpan={4}
-                      message="Memuat data pesanan..."
-                    />
-                  ) : null}
-
-                  {!loading && errorMessage ? (
-                    <TableStateRow
-                      colSpan={4}
-                      tone="danger"
-                      message={errorMessage}
-                    />
-                  ) : null}
-
-                  {!loading && !errorMessage && !orderList.length ? (
-                    <TableStateRow
-                      colSpan={4}
-                      message="Belum ada data pesanan."
-                    />
-                  ) : null}
+                  <TableQueryStateRows
+                    loading={loading}
+                    error={errorMessage}
+                    isEmpty={!orderList.length}
+                    colSpan={4}
+                    loadingMessage="Memuat data pesanan..."
+                    emptyMessage="Belum ada data pesanan."
+                  />
 
                   {!loading &&
                     !errorMessage &&
@@ -260,7 +291,7 @@ export default function MandorPesananPage() {
                           </td>
 
                           <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
-                            {formatDate(order.date)}
+                            {formatDateId(order.date)}
                           </td>
 
                           <td className="px-[1rem] py-[0.5rem]">
@@ -281,7 +312,7 @@ export default function MandorPesananPage() {
                               </Link>
                             ) : order.phase === "approved" ? (
                               <Link
-                                href={`/dashboard/mandor/pesanan/${order.id}/target`}
+                                href={`/dashboard/mandor/pesanan/${order.id}/target?clientId=${order.client_id}&foremanId=${order.foreman_id}`}
                                 className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
                               >
                                 Buat Proposal
@@ -290,9 +321,13 @@ export default function MandorPesananPage() {
                               <AppButton type="button" disabled variant="ghost">
                                 Menunggu Klien
                               </AppButton>
+                            ) : order.phase === "rejected" ? (
+                              <AppButton type="button" disabled variant="ghost">
+                                Ditolak
+                              </AppButton>
                             ) : (
                               <Link
-                                href={`/dashboard/mandor/projects/${order.id}`}
+                                href="/dashboard/mandor/projects"
                                 className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white px-[1rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
                               >
                                 Masuk Proyek

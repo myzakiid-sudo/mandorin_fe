@@ -45,8 +45,10 @@ export default function ContractorDetailTestimonials({
                   <Image
                     src="/images/icons/icon-5bintang.svg"
                     alt="Rating 5 Bintang"
-                    width={90}
-                    height={16}
+                    width={277}
+                    height={22}
+                    className="h-auto w-[5.625rem]"
+                    style={{ height: "auto" }}
                   />
                 </p>
               </div>

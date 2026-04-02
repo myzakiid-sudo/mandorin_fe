@@ -214,7 +214,6 @@ export async function updateForemanProfile(
     {
       auth: true,
       method: "PATCH",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

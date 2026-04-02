@@ -136,8 +136,10 @@ export default function ContractorListSection({
                           <Image
                             src="/images/icons/icon-5bintang.svg"
                             alt="Rating 5 Bintang"
-                            width={60}
-                            height={12}
+                            width={277}
+                            height={22}
+                            className="h-auto w-[3.75rem]"
+                            style={{ height: "auto" }}
                           />
                         </p>
                       </div>

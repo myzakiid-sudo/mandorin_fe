@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/context/auth-context";
+import { API_BASE_URL } from "@/lib/api-config";
+import { USE_AUTH_CREDENTIALS } from "@/lib/auth-fetch";
 import { extractAuthSession } from "@/lib/auth-session";
 
-const LOGIN_ENDPOINT = "https://be-internship.bccdev.id/dzaki/api/auth/login";
+const LOGIN_ENDPOINT = `${API_BASE_URL}/auth/login`;
 
 type LoginResponse = {
   success?: boolean;
@@ -58,8 +60,8 @@ export default function SharedLogin({ role }: SharedLoginProps) {
     try {
       const response = await fetch(LOGIN_ENDPOINT, {
         method: "POST",
+        ...(USE_AUTH_CREDENTIALS ? { credentials: "include" as const } : {}),
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -77,10 +79,22 @@ export default function SharedLogin({ role }: SharedLoginProps) {
         return;
       }
 
-      const authSession = extractAuthSession(data, role);
+      const authSession = extractAuthSession(data);
       if (!authSession) {
         clearSession();
-        setErrorMessage(data.message || "Email atau kata sandi tidak sesuai.");
+        setErrorMessage(
+          "Data role akun tidak valid. Silakan hubungi admin atau coba login ulang.",
+        );
+        return;
+      }
+
+      if (authSession.role !== role) {
+        clearSession();
+        setErrorMessage(
+          role === "client"
+            ? "Akun ini terdaftar sebagai mandor. Gunakan halaman login mandor."
+            : "Akun ini terdaftar sebagai client. Gunakan halaman login client.",
+        );
         return;
       }
 
@@ -91,12 +105,9 @@ export default function SharedLogin({ role }: SharedLoginProps) {
       const safeNextPath =
         nextPath && nextPath.startsWith("/") ? nextPath : defaultPath;
       router.push(safeNextPath);
-    } catch (err) {
-      console.error("Fetch error:", err);
+    } catch {
       clearSession();
-      setErrorMessage(
-        "Gagal terhubung ke server. Periksa koneksi atau port 3001.",
-      );
+      setErrorMessage("Gagal terhubung ke server. Coba lagi beberapa saat.");
     } finally {
       setLoading(false);
     }
