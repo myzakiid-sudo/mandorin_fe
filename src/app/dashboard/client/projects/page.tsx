@@ -96,21 +96,92 @@ export default function ClientProjectsPage() {
             })}
           </div>
 
-          <div className="mt-[1rem] overflow-hidden rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)]">
+          <div className="mt-[1rem] space-y-3 md:hidden">
+            {loading ? (
+              <div className="rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] px-4 py-3 text-[0.875rem] text-[var(--text-secondary)]">
+                Memuat daftar proyek...
+              </div>
+            ) : null}
+
+            {!loading && error ? (
+              <div className="rounded-[0.5rem] border border-red-200 bg-red-50 px-4 py-3 text-[0.875rem] text-[var(--red-normal)]">
+                {error}
+              </div>
+            ) : null}
+
+            {!loading && !error && !projectList.length ? (
+              <div className="rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] px-4 py-3 text-[0.875rem] text-[var(--text-secondary)]">
+                Belum ada data proyek pada tab ini.
+              </div>
+            ) : null}
+
+            {!loading &&
+              !error &&
+              projectList.map((project) => (
+                <article
+                  key={`${activeTab}-${project.id}`}
+                  className="rounded-[0.75rem] border border-[var(--black-light)] bg-[var(--white-normal)] p-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <Image
+                      src={
+                        project.foreman?.avatar || "/images/logo-mandorin.svg"
+                      }
+                      alt={project.foreman?.name || "Mandor"}
+                      width={44}
+                      height={44}
+                      className="h-[2.75rem] w-[2.75rem] rounded-full object-cover"
+                      unoptimized
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[1rem] font-medium leading-[1.5rem] text-[var(--text-black)]">
+                        {project.foreman?.name ||
+                          `Mandor #${project.foreman_id}`}
+                      </p>
+                      <p className="mt-0.5 text-[0.813rem] leading-[1.25rem] text-[var(--text-muted)]">
+                        {project.title}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-1.5 text-[0.875rem] text-[var(--text-secondary)]">
+                    <p>
+                      Tanggal:{" "}
+                      {formatDateId(project.created_at || project.deadline)}
+                    </p>
+                    <p>
+                      Anggaran: {formatCurrencyIdr(Number(project.budget) || 0)}
+                    </p>
+                  </div>
+
+                  <div className="mt-3">
+                    <Link
+                      href={`/dashboard/client/projects/${project.id}`}
+                      className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] text-[0.938rem] font-semibold text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                    >
+                      Detail
+                    </Link>
+                  </div>
+                </article>
+              ))}
+          </div>
+
+          <div className="mt-[1rem] hidden overflow-hidden rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] md:block">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[54rem] border-collapse">
+              <table className="w-full min-w-[46rem] border-collapse">
                 <thead className="bg-[var(--orange-normal)] text-[var(--text-white)]">
                   <tr>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Nama
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Tanggal
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Anggaran
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-right text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-right text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Lihat Detail
                     </th>
                   </tr>
@@ -146,7 +217,7 @@ export default function ClientProjectsPage() {
                           />
 
                           <div>
-                            <p className="text-[1.125rem] font-medium leading-[1.75rem] text-[var(--text-black)]">
+                            <p className="text-[1rem] font-medium leading-[1.5rem] text-[var(--text-black)] lg:text-[1.125rem] lg:leading-[1.75rem]">
                               {project.foreman?.name ||
                                 `Mandor #${project.foreman_id}`}
                             </p>
@@ -157,18 +228,18 @@ export default function ClientProjectsPage() {
                         </div>
                       </td>
 
-                      <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
+                      <td className="px-[1rem] py-[0.5rem] text-[1rem] leading-[1.5rem] text-[var(--text-secondary)] lg:text-[1.125rem] lg:leading-[1.75rem]">
                         {formatDateId(project.created_at || project.deadline)}
                       </td>
 
-                      <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
+                      <td className="px-[1rem] py-[0.5rem] text-[1rem] leading-[1.5rem] text-[var(--text-secondary)] lg:text-[1.125rem] lg:leading-[1.75rem]">
                         {formatCurrencyIdr(Number(project.budget) || 0)}
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-right">
                         <Link
                           href={`/dashboard/client/projects/${project.id}`}
-                          className="inline-flex min-w-[5.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                          className="inline-flex min-w-[5.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
                         >
                           Detail
                         </Link>
@@ -178,8 +249,6 @@ export default function ClientProjectsPage() {
                 </tbody>
               </table>
             </div>
-
-            <div className="h-[12rem] w-full bg-[var(--white-normal)] md:h-[14rem]" />
           </div>
         </section>
       </main>

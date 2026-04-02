@@ -28,7 +28,7 @@ export default function TestimonialSection() {
   return (
     <section className="w-full bg-white py-16 md:py-24">
       <div className="mx-auto w-full max-w-[90rem] px-5 md:px-10 xl:px-[6.25rem]">
-        <h2 className="text-center text-4xl font-semibold leading-[2.375rem] text-[var(--text-black)]">
+        <h2 className="text-center text-[1.75rem] font-semibold leading-[2.25rem] text-[var(--text-black)] md:text-[2.25rem] md:leading-[2.375rem]">
           Testimoni Pelanggan
         </h2>
 
@@ -39,7 +39,7 @@ export default function TestimonialSection() {
               className="flex flex-col items-center text-center"
             >
               <div className="relative w-full rounded-[1.25rem] bg-white px-6 pb-8 pt-8 shadow-[0_0.25rem_1rem_rgba(0,0,0,0.06)] md:min-h-[16rem] md:px-8 md:pt-9">
-                <p className="text-base leading-8 text-[var(--text-black)]">
+                <p className="text-[0.938rem] leading-7 text-[var(--text-black)] md:text-base md:leading-8">
                   {item.pesan}
                 </p>
 
@@ -67,10 +67,10 @@ export default function TestimonialSection() {
                 />
               </div>
 
-              <h3 className="mt-4 text-[1.75rem] font-semibold leading-10 text-[var(--text-black)]">
+              <h3 className="mt-4 text-[1.375rem] font-semibold leading-8 text-[var(--text-black)] md:text-[1.75rem] md:leading-10">
                 {item.nama}
               </h3>
-              <p className="mt-1 text-[1.5rem] leading-9 text-[var(--text-secondary)]">
+              <p className="mt-1 text-[1.125rem] leading-7 text-[var(--text-secondary)] md:text-[1.5rem] md:leading-9">
                 {item.pekerjaan}
               </p>
             </article>

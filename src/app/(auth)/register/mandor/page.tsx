@@ -181,7 +181,7 @@ export default function RegisterMandorPage() {
         </header>
 
         <section className="mt-5 rounded-2xl border border-[var(--black-light)] bg-[var(--white-normal)] px-5 py-8 shadow-sm md:px-10 md:py-10">
-          <h1 className="text-center text-2xl font-semibold text-[var(--text-black)]">
+          <h1 className="text-center text-[1.5rem] font-semibold text-[var(--text-black)] md:text-2xl">
             Isi Data Diri Mandor
           </h1>
 

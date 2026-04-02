@@ -26,7 +26,7 @@ export default function LayananSection() {
     <section className="w-full bg-white py-16 md:py-24">
       <div className="mx-auto max-w-[90rem] px-5 md:px-10 xl:px-[6.25rem]">
         {/* Judul */}
-        <h2 className="mb-12 text-center text-4xl font-semibold leading-[2.375rem] text-[var(--text-black)]">
+        <h2 className="mb-12 text-center text-[1.75rem] font-semibold leading-[2.25rem] text-[var(--text-black)] md:text-[2.25rem] md:leading-[2.375rem]">
           Layanan Kami
         </h2>
 
@@ -46,7 +46,7 @@ export default function LayananSection() {
                 </div>
 
                 {/* Judul layanan */}
-                <h3 className="text-[1.125rem] font-semibold leading-7 text-[var(--text-black)]">
+                <h3 className="text-[1rem] font-semibold leading-7 text-[var(--text-black)] md:text-[1.125rem]">
                   {item.judul}
                 </h3>
 

@@ -227,21 +227,21 @@ export default function MandorProjectDetailPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
               <Link
                 href="/dashboard/mandor/projects"
-                className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] border border-[var(--black-light)] px-4 text-[0.938rem] font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--white-normal-hover)]"
+                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--black-light)] px-4 text-[0.938rem] font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--white-normal-hover)] sm:w-auto"
               >
                 Kembali
               </Link>
 
-              <span className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-4 text-[0.938rem] font-semibold text-white">
+              <span className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-4 text-[0.938rem] font-semibold text-white sm:w-auto">
                 {project.status}
               </span>
 
               <Link
                 href="/dashboard/mandor/chat"
-                className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] sm:w-auto"
               >
                 Pesan
               </Link>
@@ -250,7 +250,7 @@ export default function MandorProjectDetailPage() {
         </section>
 
         <section className="px-[1rem] py-[2rem] md:px-[2.5rem] md:py-[2.5rem] xl:px-[6.25rem]">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[1.5rem] font-semibold text-[var(--text-black)] md:text-[1.75rem]">
               Timeline Utama Pengerjaan
             </h2>
@@ -261,7 +261,7 @@ export default function MandorProjectDetailPage() {
                 clearActionState();
                 setShowMilestoneForm((prev) => !prev);
               }}
-              className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+              className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] sm:w-auto"
             >
               {showMilestoneForm ? "Tutup Form" : "+ Tambah Milestone"}
             </button>
@@ -314,11 +314,11 @@ export default function MandorProjectDetailPage() {
                 />
               </label>
 
-              <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex justify-stretch sm:justify-end">
                 <button
                   type="submit"
                   disabled={isAddingMilestone}
-                  className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                  className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:w-auto"
                 >
                   {isAddingMilestone ? "Menyimpan..." : "Simpan Milestone"}
                 </button>
@@ -414,7 +414,7 @@ export default function MandorProjectDetailPage() {
         </section>
 
         <section className="px-[1rem] pb-[2rem] md:px-[2.5rem] xl:px-[6.25rem]">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[1.5rem] font-semibold text-[var(--text-black)] md:text-[1.75rem]">
               Progres Harian
             </h2>
@@ -425,7 +425,7 @@ export default function MandorProjectDetailPage() {
                 clearActionState();
                 setShowReportForm((prev) => !prev);
               }}
-              className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+              className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] px-4 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] sm:w-auto"
             >
               {showReportForm ? "Tutup Form" : "+ Tambah Progres"}
             </button>
@@ -474,11 +474,11 @@ export default function MandorProjectDetailPage() {
                 />
               </label>
 
-              <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex justify-stretch sm:justify-end">
                 <button
                   type="submit"
                   disabled={isAddingReport}
-                  className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                  className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:w-auto"
                 >
                   {isAddingReport ? "Menyimpan..." : "Simpan Progres"}
                 </button>

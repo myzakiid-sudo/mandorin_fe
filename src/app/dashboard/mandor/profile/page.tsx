@@ -137,7 +137,7 @@ export default function MandorProfilePage() {
   return (
     <main className="min-h-screen bg-[var(--white-normal-hover)] px-4 py-6 md:px-8 md:py-10 xl:px-16">
       <section className="mx-auto w-full max-w-5xl rounded-2xl border border-[var(--black-light)] bg-white p-6 shadow-sm md:p-8">
-        <h1 className="text-3xl font-semibold text-[var(--text-black)]">
+        <h1 className="text-[1.75rem] font-semibold text-[var(--text-black)] md:text-3xl">
           Profil Mandor
         </h1>
 
@@ -233,12 +233,12 @@ export default function MandorProfilePage() {
             multiline
           />
 
-          <div className="md:col-span-2 flex justify-end">
+          <div className="flex justify-stretch md:col-span-2 md:justify-end">
             <AppButton
               type="submit"
               loading={saving}
               loadingText="Menyimpan..."
-              className="h-11 min-w-[10rem] rounded-lg px-5 text-sm"
+              className="h-11 w-full rounded-lg px-5 text-sm md:w-auto md:min-w-[10rem]"
             >
               Simpan Profil
             </AppButton>

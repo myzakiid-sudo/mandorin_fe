@@ -165,12 +165,12 @@ export default function ClientProfilePage() {
   return (
     <main className="min-h-screen bg-[var(--white-normal-hover)] px-4 py-6 md:px-8 md:py-10 xl:px-16">
       <section className="mx-auto w-full max-w-5xl rounded-2xl border border-[var(--black-light)] bg-white p-6 shadow-sm md:p-8">
-        <h1 className="text-3xl font-semibold text-[var(--text-black)]">
+        <h1 className="text-[1.75rem] font-semibold text-[var(--text-black)] md:text-3xl">
           Profil Client
         </h1>
 
         <div className="mt-6 grid gap-6 md:grid-cols-[10rem_1fr] md:items-start">
-          <div className="relative h-40 w-40 overflow-hidden rounded-full border border-[var(--black-light)] bg-[var(--white-normal-hover)]">
+          <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full border border-[var(--black-light)] bg-[var(--white-normal-hover)] md:mx-0 md:h-40 md:w-40">
             {profile?.avatar ? (
               <Image
                 src={profile.avatar}

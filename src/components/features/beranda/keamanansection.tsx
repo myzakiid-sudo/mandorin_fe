@@ -39,10 +39,10 @@ export default function KeamananSection() {
                   </span>
 
                   <div>
-                    <h3 className="text-3xl font-semibold leading-[2.25rem] text-[var(--text-black)] md:text-[2rem] md:leading-[2.5rem]">
+                    <h3 className="text-[1.375rem] font-semibold leading-[1.875rem] text-[var(--text-black)] md:text-[2rem] md:leading-[2.5rem]">
                       {item.judul}
                     </h3>
-                    <p className="mt-3 text-xl leading-8 text-[#7b7b7b]">
+                    <p className="mt-3 text-[1rem] leading-7 text-[#7b7b7b] md:text-xl md:leading-8">
                       {item.deskripsi}
                     </p>
                   </div>
@@ -52,18 +52,18 @@ export default function KeamananSection() {
           </article>
 
           <article className="lg:pl-4">
-            <h2 className="text-3xl font-semibold leading-[2.25rem] text-[var(--text-black)] md:text-[2rem] md:leading-[2.5rem]">
+            <h2 className="text-[1.5rem] font-semibold leading-[2rem] text-[var(--text-black)] md:text-[2rem] md:leading-[2.5rem]">
               Kepercayaan & Keamanan Proyek Mandorin
             </h2>
 
-            <p className="mt-8 text-xl leading-8 text-[#7b7b7b]">
+            <p className="mt-8 text-[1rem] leading-7 text-[#7b7b7b] md:text-xl md:leading-8">
               Keamanan dan kenyamanan pengguna adalah prioritas utama kami.
               Mandorin membantu memastikan setiap proyek berjalan lebih terarah
               melalui mandor terverifikasi, komunikasi yang terdokumentasi, dan
               progres pekerjaan yang lebih transparan.
             </p>
 
-            <p className="mt-8 text-xl font-semibold leading-8 text-[var(--orange-normal)]">
+            <p className="mt-8 text-[1rem] font-semibold leading-7 text-[var(--orange-normal)] md:text-xl md:leading-8">
               “Mandorin bukan sekadar membantu mencari mandor, tetapi juga
               menghadirkan rasa aman melalui proses kerja yang lebih transparan,
               terpantau, dan terpercaya.”

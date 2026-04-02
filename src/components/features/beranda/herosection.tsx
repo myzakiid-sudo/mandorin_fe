@@ -30,12 +30,12 @@ export default function HeroSection() {
         <div className="flex flex-col items-center gap-10 lg:flex-row lg:gap-0">
           {/* ── Kiri: Teks ── */}
           <div className="flex flex-1 flex-col items-start">
-            <h1 className="mb-5 text-5xl font-semibold leading-[3.625rem] text-[var(--text-black)]">
+            <h1 className="mb-5 text-[2rem] font-semibold leading-[2.5rem] text-[var(--text-black)] md:text-[2.5rem] md:leading-[3rem] lg:text-5xl lg:leading-[3.625rem]">
               Kerja Rapi, Owner{" "}
               <span className="text-[var(--orange-normal)]">Happy!</span>
             </h1>
 
-            <p className="mb-8 max-w-[30rem] text-base leading-6 text-[var(--text-secondary)]">
+            <p className="mb-8 max-w-[30rem] text-[0.938rem] leading-6 text-[var(--text-secondary)] md:text-base">
               Mandorin adalah platform digital yang menghubungkan pemilik
               properti dengan mandor konstruksi terverifikasi melalui sistem
               yang transparan dan aman. Kami hadir untuk menghilangkan
@@ -48,7 +48,7 @@ export default function HeroSection() {
 
             <Link
               href={pesanHref}
-              className="inline-flex h-[3.25rem] items-center justify-center rounded-full bg-[var(--orange-normal)] px-10 text-[1rem] font-semibold text-white transition-opacity hover:opacity-90"
+              className="inline-flex h-[3rem] items-center justify-center rounded-full bg-[var(--orange-normal)] px-8 text-[0.938rem] font-semibold text-white transition-opacity hover:opacity-90 md:h-[3.25rem] md:px-10 md:text-[1rem]"
             >
               Pesan
             </Link>

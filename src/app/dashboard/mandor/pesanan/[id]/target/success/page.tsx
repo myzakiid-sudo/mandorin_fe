@@ -18,7 +18,7 @@ export default async function TargetSuccessPage({
         <BackgroundCircles />
 
         {/* Gambar Trophy/Badge Success */}
-        <div className="relative mb-8 h-[18rem] w-[18rem] md:h-[22rem] md:w-[22rem] lg:w-[26rem] lg:h-[26rem]">
+        <div className="relative mb-8 h-[15rem] w-[15rem] sm:h-[18rem] sm:w-[18rem] md:h-[22rem] md:w-[22rem] lg:h-[26rem] lg:w-[26rem]">
           <Image
             src="/images/assets/sucsess.png"
             alt="Proposal Terkirim"
@@ -39,7 +39,7 @@ export default async function TargetSuccessPage({
           </p>
           <Link
             href="/dashboard/mandor/pesanan"
-            className="inline-flex h-[3.25rem] w-[18rem] items-center justify-center rounded-lg bg-[var(--orange-normal)] text-[1rem] font-semibold text-white transition-colors hover:bg-orange-600"
+            className="inline-flex h-[3.25rem] w-full max-w-[18rem] items-center justify-center rounded-lg bg-[var(--orange-normal)] px-4 text-[1rem] font-semibold text-white transition-colors hover:bg-orange-600"
           >
             Kembali ke Pesanan
           </Link>

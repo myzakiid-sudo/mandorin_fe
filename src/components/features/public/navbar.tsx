@@ -86,6 +86,11 @@ export default function PublicNavbar() {
     };
   }, []);
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsProfileMenuOpen(false);
+  }, [pathname]);
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -134,17 +139,17 @@ export default function PublicNavbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--black-light)] bg-white/95 backdrop-blur">
-      <nav className="mx-auto flex w-full max-w-[90rem] items-center justify-between px-5 py-3 md:px-10 xl:px-[6.25rem]">
+      <nav className="mx-auto flex w-full max-w-[90rem] items-center justify-between px-4 py-3 sm:px-5 md:px-10 xl:px-[6.25rem]">
         <Link href="/beranda" className="flex items-center gap-2">
           <Image
             src="/images/logo-mandorin.svg"
             alt="MandorIn"
             width={40}
             height={40}
-            className="h-10 w-10 object-contain"
+            className="h-9 w-9 object-contain sm:h-10 sm:w-10"
             priority
           />
-          <span className="text-[1.75rem] font-semibold text-[var(--orange-normal)]">
+          <span className="text-[1.25rem] font-semibold text-[var(--orange-normal)] sm:text-[1.5rem] md:text-[1.75rem]">
             MandorIn
           </span>
         </Link>
@@ -157,7 +162,7 @@ export default function PublicNavbar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`inline-flex items-center border-b-2 pb-1 text-[1.75rem] leading-10 transition-colors ${
+                  className={`inline-flex items-center border-b-2 pb-1 text-[1.25rem] leading-8 transition-colors xl:text-[1.5rem] xl:leading-10 ${
                     isActive
                       ? "border-[var(--orange-normal)] font-semibold text-[var(--orange-normal)]"
                       : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]"
@@ -176,11 +181,13 @@ export default function PublicNavbar() {
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className="inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-lg border border-[var(--orange-normal)] px-4 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
+                className="inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-lg border border-[var(--orange-normal)] px-3 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
                 aria-haspopup="menu"
                 aria-expanded={isProfileMenuOpen}
               >
-                <span className="max-w-[7.5rem] truncate">{profileLabel}</span>
+                <span className="max-w-[5.5rem] truncate sm:max-w-[7.5rem]">
+                  {profileLabel}
+                </span>
                 <svg
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -228,7 +235,7 @@ export default function PublicNavbar() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-4 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
+              className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-3 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
             >
               Masuk
             </Link>
@@ -239,7 +246,10 @@ export default function PublicNavbar() {
             aria-label="Buka menu navigasi"
             aria-expanded={isMobileMenuOpen}
             className="inline-flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-lg border border-[var(--black-light)] text-[var(--text-black)] transition-colors hover:bg-[var(--white-normal-hover)] lg:hidden"
-            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            onClick={() => {
+              setIsProfileMenuOpen(false);
+              setIsMobileMenuOpen((prev) => !prev);
+            }}
           >
             <svg
               viewBox="0 0 24 24"
@@ -260,7 +270,7 @@ export default function PublicNavbar() {
 
       {isMobileMenuOpen ? (
         <div className="border-t border-[var(--black-light)] bg-white lg:hidden">
-          <ul className="mx-auto flex w-full max-w-[90rem] flex-col px-5 py-3 md:px-10">
+          <ul className="mx-auto flex w-full max-w-[90rem] flex-col px-4 py-3 sm:px-5 md:px-10">
             {navItems.map((item) => {
               const isActive = isNavItemActive(item.href);
 

@@ -288,7 +288,7 @@ export default function ClientTargetPengerjaanPage() {
             <button
               type="button"
               onClick={() => router.push("/dashboard/client/pesanan")}
-              className="mt-5 inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
+              className="mt-5 inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] sm:w-auto"
             >
               Kembali ke Pesanan
             </button>
@@ -369,7 +369,7 @@ export default function ClientTargetPengerjaanPage() {
               <button
                 type="button"
                 onClick={handleApproveProposal}
-                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--green-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--green-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:max-w-[11rem]"
                 disabled={isSavingDecision || isDecisionFinal}
               >
                 {isSavingDecision
@@ -384,7 +384,7 @@ export default function ClientTargetPengerjaanPage() {
               <button
                 type="button"
                 onClick={handleRejectProposal}
-                className="inline-flex h-[2.75rem] w-full max-w-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--red-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--red-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--red-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:max-w-[11rem]"
                 disabled={isSavingDecision || isDecisionFinal}
               >
                 {isSavingDecision
@@ -400,7 +400,7 @@ export default function ClientTargetPengerjaanPage() {
                 <button
                   type="button"
                   onClick={handlePayProposal}
-                  className="inline-flex h-[2.75rem] w-full max-w-[23rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-bg)] disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                  className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-bg)] disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:max-w-[23rem]"
                   disabled={!isReadyToPay || isPaying || isSavingDecision}
                 >
                   {isPaying
@@ -417,7 +417,7 @@ export default function ClientTargetPengerjaanPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/dashboard/client/projects")}
-                  className="inline-flex h-[2.75rem] w-full max-w-[23rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white px-5 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+                  className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white px-5 text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] sm:max-w-[23rem]"
                 >
                   Lanjut ke Proyek Saya
                 </button>

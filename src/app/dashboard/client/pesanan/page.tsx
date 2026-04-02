@@ -196,21 +196,124 @@ export default function ClientPesananPage() {
             className="mt-[0.75rem]"
           />
 
-          <div className="mt-[1rem] overflow-hidden rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)]">
+          <div className="mt-[1rem] space-y-3 md:hidden">
+            {loading ? (
+              <div className="rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] px-4 py-3 text-[0.875rem] text-[var(--text-secondary)]">
+                Memuat data pesanan...
+              </div>
+            ) : null}
+
+            {!loading && errorMessage ? (
+              <div className="rounded-[0.5rem] border border-red-200 bg-red-50 px-4 py-3 text-[0.875rem] text-[var(--red-normal)]">
+                {errorMessage}
+              </div>
+            ) : null}
+
+            {!loading && !errorMessage && !orderList.length ? (
+              <div className="rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] px-4 py-3 text-[0.875rem] text-[var(--text-secondary)]">
+                Belum ada data pesanan.
+              </div>
+            ) : null}
+
+            {!loading &&
+              !errorMessage &&
+              orderList.map((order) => {
+                const foremanSummary = foremanLookup[order.foreman_id];
+                const foremanName =
+                  foremanSummary?.name || `Mandor #${order.foreman_id}`;
+                const foremanAvatar =
+                  foremanSummary?.avatar || "/images/logo-mandorin.svg";
+
+                const matchedProposal = proposalByOrder[String(order.id)];
+                const proposalId = matchedProposal
+                  ? String(matchedProposal.id)
+                  : "";
+                const proposalStatusMeta = getProposalStatusMeta(
+                  matchedProposal?.status,
+                );
+                const canCheckProposal =
+                  order.status === "DISETUJUI" && Boolean(proposalId);
+
+                return (
+                  <article
+                    key={order.id}
+                    className="rounded-[0.75rem] border border-[var(--black-light)] bg-[var(--white-normal)] p-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="relative h-[2.75rem] w-[2.75rem] overflow-hidden rounded-full">
+                        <Image
+                          src={foremanAvatar}
+                          alt={foremanName}
+                          fill
+                          sizes="44px"
+                          className="object-cover"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[1rem] font-medium leading-[1.5rem] text-[var(--text-black)]">
+                          {foremanName}
+                        </p>
+                        <p className="mt-0.5 text-[0.813rem] leading-[1.25rem] text-[var(--text-muted)]">
+                          {order.location}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-1.5 text-[0.875rem] text-[var(--text-secondary)]">
+                      <p>Tanggal: {formatDateId(order.date)}</p>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.875rem] font-semibold leading-[1.25rem] ${getStatusClassName(order.status)}`}
+                      >
+                        {getStatusLabel(order.status)}
+                      </span>
+
+                      {proposalStatusMeta ? (
+                        <span
+                          className={`inline-flex h-[2rem] min-w-[6rem] items-center justify-center rounded-[0.5rem] px-[0.75rem] text-[0.75rem] font-semibold ${proposalStatusMeta.className}`}
+                        >
+                          {proposalStatusMeta.label}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-3">
+                      {canCheckProposal ? (
+                        <Link
+                          href={`/dashboard/client/pesanan/${order.id}/target${proposalId ? `?proposalId=${proposalId}` : ""}`}
+                          className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[0.875rem] text-[0.938rem] font-semibold text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                        >
+                          Cek Proposal
+                        </Link>
+                      ) : (
+                        <span className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--btn-disabled-bg)] px-[0.875rem] text-[0.938rem] font-semibold text-[var(--btn-disabled-text)]">
+                          Cek Proposal
+                        </span>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+          </div>
+
+          <div className="mt-[1rem] hidden overflow-hidden rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] md:block">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[42rem] border-collapse">
                 <thead className="bg-[var(--orange-normal)] text-[var(--text-white)]">
                   <tr>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Nama
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Tanggal
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Status
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-right text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-right text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Proposal
                     </th>
                   </tr>
@@ -263,7 +366,7 @@ export default function ClientPesananPage() {
                               </div>
 
                               <div>
-                                <p className="text-[1.125rem] font-medium leading-[1.75rem] text-[var(--text-black)]">
+                                <p className="text-[1rem] font-medium leading-[1.5rem] text-[var(--text-black)] lg:text-[1.125rem] lg:leading-[1.75rem]">
                                   {foremanName}
                                 </p>
                                 <p className="text-[0.875rem] leading-[1.25rem] text-[var(--text-muted)]">
@@ -273,13 +376,13 @@ export default function ClientPesananPage() {
                             </div>
                           </td>
 
-                          <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
+                          <td className="px-[1rem] py-[0.5rem] text-[1rem] leading-[1.5rem] text-[var(--text-secondary)] lg:text-[1.125rem] lg:leading-[1.75rem]">
                             {formatDateId(order.date)}
                           </td>
 
                           <td className="px-[1rem] py-[0.5rem]">
                             <span
-                              className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] ${getStatusClassName(order.status)}`}
+                              className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] lg:text-[1rem] ${getStatusClassName(order.status)}`}
                             >
                               {getStatusLabel(order.status)}
                             </span>
@@ -298,12 +401,12 @@ export default function ClientPesananPage() {
                               {canCheckProposal ? (
                                 <Link
                                   href={`/dashboard/client/pesanan/${order.id}/target${proposalId ? `?proposalId=${proposalId}` : ""}`}
-                                  className="inline-flex h-[2.5rem] min-w-[7.5rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[0.875rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                                  className="inline-flex h-[2.5rem] min-w-[7.5rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[0.875rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
                                 >
                                   Cek Proposal
                                 </Link>
                               ) : (
-                                <span className="inline-flex h-[2.5rem] min-w-[7.5rem] items-center justify-center rounded-[0.5rem] bg-[var(--btn-disabled-bg)] px-[0.875rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--btn-disabled-text)]">
+                                <span className="inline-flex h-[2.5rem] min-w-[7.5rem] items-center justify-center rounded-[0.5rem] bg-[var(--btn-disabled-bg)] px-[0.875rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--btn-disabled-text)] lg:text-[1rem]">
                                   Cek Proposal
                                 </span>
                               )}
@@ -315,8 +418,6 @@ export default function ClientPesananPage() {
                 </tbody>
               </table>
             </div>
-
-            <div className="h-[12rem] w-full bg-[var(--white-normal)] md:h-[14rem]" />
           </div>
         </section>
       </main>

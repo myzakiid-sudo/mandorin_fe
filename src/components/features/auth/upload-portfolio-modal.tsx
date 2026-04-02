@@ -89,7 +89,7 @@ export default function UploadPortfolioModal({
         onChange={handleFileChange}
       />
 
-      <div className="relative w-full max-w-[50rem] overflow-hidden rounded-[1.5rem] bg-[#ececef] shadow-[0_0.625rem_2.5rem_rgba(0,0,0,0.16)]">
+      <div className="relative max-h-[90vh] w-full max-w-[50rem] overflow-hidden rounded-[1.5rem] bg-[#ececef] shadow-[0_0.625rem_2.5rem_rgba(0,0,0,0.16)]">
         {/* Header Modal */}
         <div className="flex h-[4rem] items-center bg-[var(--blue-dark)] px-4 text-white md:px-6">
           <div className="w-1/4">
@@ -129,7 +129,7 @@ export default function UploadPortfolioModal({
 
         {/* Tahap 1: Pick File */}
         {uploadStep === "pick" && (
-          <div className="flex min-h-[24rem] flex-col items-center justify-center px-6 py-10 text-center">
+          <div className="flex min-h-[20rem] flex-col items-center justify-center px-6 py-10 text-center md:min-h-[24rem]">
             <Image
               src="/images/icons/icon-uploadproject-photovideo.svg"
               alt="Ikon foto dan video"
@@ -139,14 +139,14 @@ export default function UploadPortfolioModal({
               priority
             />
 
-            <p className="mt-5 text-[1.75rem] font-medium leading-[2.5rem] text-[var(--text-black)]">
+            <p className="mt-5 text-[1.125rem] font-medium leading-[1.75rem] text-[var(--text-black)] md:text-[1.75rem] md:leading-[2.5rem]">
               Tarik foto portofolio Anda ke sini
             </p>
 
             <button
               type="button"
               onClick={handleChooseFile}
-              className="mt-6 inline-flex h-[3.5rem] min-w-[20rem] items-center justify-center rounded-[0.75rem] bg-[var(--orange-normal)] px-8 text-[1.5rem] font-semibold leading-[2.25rem] text-white transition-colors hover:bg-[var(--orange-dark)]"
+              className="mt-6 inline-flex h-[3.25rem] w-full max-w-[20rem] items-center justify-center rounded-[0.75rem] bg-[var(--orange-normal)] px-6 text-[1rem] font-semibold leading-[1.5rem] text-white transition-colors hover:bg-[var(--orange-dark)] md:h-[3.5rem] md:text-[1.5rem] md:leading-[2.25rem]"
             >
               Pilih dari Komputer
             </button>
@@ -155,7 +155,7 @@ export default function UploadPortfolioModal({
 
         {/* Tahap 2: Preview Hasil Unggah */}
         {uploadStep === "preview" && (
-          <div className="relative min-h-[28rem] bg-[#d9d9dc] flex justify-center items-center overflow-hidden">
+          <div className="relative flex min-h-[20rem] items-center justify-center overflow-hidden bg-[#d9d9dc] md:min-h-[28rem]">
             {previewUrl && (
               <Image
                 src={previewUrl}
@@ -167,20 +167,20 @@ export default function UploadPortfolioModal({
             )}
 
             <div className="absolute inset-x-0 bottom-5 flex items-center justify-center px-5 gap-4">
-               <button
-                  type="button"
-                  onClick={handleChooseFile}
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/80 transition-transform hover:scale-105 shadow-md"
-                  title="Ganti Gambar"
-                >
-                  <Image
-                    src="/images/icons/ganti-gambar.svg"
-                    alt="Ganti gambar"
-                    width={24}
-                    height={24}
-                    className="h-6 w-6 object-contain"
-                  />
-                </button>
+              <button
+                type="button"
+                onClick={handleChooseFile}
+                className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/80 transition-transform hover:scale-105 shadow-md"
+                title="Ganti Gambar"
+              >
+                <Image
+                  src="/images/icons/ganti-gambar.svg"
+                  alt="Ganti gambar"
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 object-contain"
+                />
+              </button>
             </div>
           </div>
         )}

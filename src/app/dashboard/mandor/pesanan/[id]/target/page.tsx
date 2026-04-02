@@ -329,7 +329,7 @@ export default function TargetTahapanPengerjaanPage() {
               <button
                 type="button"
                 onClick={handleAddStage}
-                className="inline-flex h-[2.5rem] w-full max-w-[13rem] items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] text-[0.875rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+                className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] text-[0.875rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] sm:max-w-[13rem]"
               >
                 + Tambah Tahapan
               </button>
@@ -360,7 +360,7 @@ export default function TargetTahapanPengerjaanPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-[3.25rem] w-full max-w-[18rem] rounded-[0.5rem] bg-[var(--orange-normal)] text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                className="h-[3.25rem] w-full rounded-[0.5rem] bg-[var(--orange-normal)] text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:max-w-[18rem]"
               >
                 {isSubmitting ? "Mengirim..." : "Kirim"}
               </button>

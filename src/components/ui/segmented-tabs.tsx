@@ -21,7 +21,12 @@ export function SegmentedTabs<T extends string>({
   className,
 }: SegmentedTabsProps<T>) {
   return (
-    <div className={cn("flex items-center gap-[0.75rem]", className)}>
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-[0.5rem] md:gap-[0.75rem]",
+        className,
+      )}
+    >
       {options.map((option) => {
         const isActive = value === option.value;
 
@@ -31,7 +36,7 @@ export function SegmentedTabs<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "min-w-[5.75rem] rounded-[0.5rem] px-[0.875rem] py-[0.5rem] text-[1.125rem] font-semibold leading-[1.75rem] transition-colors",
+              "min-w-[5.25rem] rounded-[0.5rem] px-[0.75rem] py-[0.5rem] text-[0.875rem] font-semibold leading-[1.25rem] transition-colors sm:min-w-[5.75rem] sm:px-[0.875rem] sm:text-[1rem] sm:leading-[1.5rem] md:text-[1.125rem] md:leading-[1.75rem]",
               isActive
                 ? "bg-[var(--orange-normal)] text-[var(--text-white)]"
                 : "bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)] hover:bg-[var(--black-light-hover)]",

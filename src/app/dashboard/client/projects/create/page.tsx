@@ -65,7 +65,7 @@ export default function CreateProjectPage() {
 
       <main className="mx-auto w-full max-w-[90rem] px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
         <section className="mx-auto max-w-[50rem] rounded-[0.75rem] border border-[var(--black-light)] bg-[var(--white-normal)] p-[1rem] md:p-[1.5rem]">
-          <h1 className="text-[1.75rem] font-semibold leading-[2.5rem] text-[var(--text-black)]">
+          <h1 className="text-[1.5rem] font-semibold leading-[2.125rem] text-[var(--text-black)] md:text-[1.75rem] md:leading-[2.5rem]">
             Buat Proyek Baru
           </h1>
 
@@ -156,18 +156,18 @@ export default function CreateProjectPage() {
               </p>
             ) : null}
 
-            <div className="mt-2 flex justify-end gap-3">
+            <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/client/projects")}
-                className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] border border-[var(--black-light)] px-4 text-[0.938rem] font-semibold text-[var(--text-secondary)]"
+                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--black-light)] px-4 text-[0.938rem] font-semibold text-[var(--text-secondary)] sm:w-auto"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex h-[2.75rem] items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:w-auto"
               >
                 {isSubmitting ? "Menyimpan..." : "Buat Proyek"}
               </button>

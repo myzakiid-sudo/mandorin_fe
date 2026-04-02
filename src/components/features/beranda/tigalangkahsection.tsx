@@ -50,18 +50,17 @@ export default function TigaLangkahSection() {
   return (
     <section className="w-full bg-[#f5f5f5] py-16 md:py-24">
       <div className="mx-auto w-full max-w-[90rem] px-5 md:px-10 xl:px-[6.25rem]">
-        
         {/* Toggle Nav */}
         <div className="mx-auto flex flex-col items-center">
-          <div className="inline-flex rounded-full border border-[var(--orange-normal)] bg-white p-1">
+          <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-[var(--orange-normal)] bg-white p-1">
             <button
               type="button"
               onClick={() => setActiveTab("client")}
               className={cn(
-                "rounded-full px-6 py-2 text-sm font-semibold transition-colors",
+                "rounded-full px-4 py-2 text-sm font-semibold transition-colors md:px-6",
                 activeTab === "client"
                   ? "bg-[var(--orange-normal)] text-white"
-                  : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]"
+                  : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]",
               )}
             >
               Untuk Client
@@ -70,10 +69,10 @@ export default function TigaLangkahSection() {
               type="button"
               onClick={() => setActiveTab("mandor")}
               className={cn(
-                "rounded-full px-6 py-2 text-sm font-semibold transition-colors",
+                "rounded-full px-4 py-2 text-sm font-semibold transition-colors md:px-6",
                 activeTab === "mandor"
                   ? "bg-[var(--orange-normal)] text-white"
-                  : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]"
+                  : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]",
               )}
             >
               Untuk Mandor
@@ -98,10 +97,10 @@ export default function TigaLangkahSection() {
                 key={item.judul}
                 className="rounded-[1.5rem] border border-[#f6eadc] bg-white px-7 py-8 text-center shadow-[0_0.625rem_1.875rem_rgba(0,0,0,0.04)] md:px-9"
               >
-                <h3 className="text-[1.75rem] font-semibold leading-[2.25rem] text-[var(--text-black)]">
+                <h3 className="text-[1.375rem] font-semibold leading-[1.875rem] text-[var(--text-black)] md:text-[1.75rem] md:leading-[2.25rem]">
                   {item.judul}
                 </h3>
-                <p className="mx-auto mt-4 max-w-[31rem] text-base leading-8 text-[var(--text-secondary)]">
+                <p className="mx-auto mt-4 max-w-[31rem] text-[0.938rem] leading-7 text-[var(--text-secondary)] md:text-base md:leading-8">
                   {item.deskripsi}
                 </p>
               </article>

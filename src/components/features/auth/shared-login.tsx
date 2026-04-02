@@ -115,8 +115,8 @@ export default function SharedLogin({ role }: SharedLoginProps) {
 
   return (
     <main className="flex min-h-screen w-full">
-      <div className="flex flex-col justify-center w-full lg:w-1/2 px-8 md:px-16 xl:px-24 py-12 bg-white">
-        <h1 className="mb-3 text-center text-[2.5rem] font-semibold leading-[3rem]">
+      <div className="flex w-full flex-col justify-center bg-white px-5 py-10 sm:px-8 md:px-16 xl:px-24">
+        <h1 className="mb-3 text-center text-[2rem] font-semibold leading-[2.5rem] md:text-[2.5rem] md:leading-[3rem]">
           <span className="text-[var(--blue-dark)]">Masuk ke </span>
           <span className="text-[var(--orange-normal)]">MandorIn</span>
         </h1>

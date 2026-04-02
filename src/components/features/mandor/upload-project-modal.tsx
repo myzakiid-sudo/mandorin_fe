@@ -111,7 +111,7 @@ export default function UploadProjectModal({
         onChange={handleFileChange}
       />
 
-      <div className="relative w-full max-w-[74rem] overflow-hidden rounded-[1.5rem] bg-[#ececef] shadow-[0_0.625rem_2.5rem_rgba(0,0,0,0.16)]">
+      <div className="relative max-h-[90vh] w-full max-w-[74rem] overflow-hidden rounded-[1.5rem] bg-[#ececef] shadow-[0_0.625rem_2.5rem_rgba(0,0,0,0.16)]">
         <div className="flex h-[4rem] items-center bg-[var(--blue-dark)] px-4 text-white md:px-6">
           <div className="w-1/4">
             {uploadStep === "preview" || uploadStep === "describe" ? (
@@ -160,7 +160,7 @@ export default function UploadProjectModal({
         </div>
 
         {uploadStep === "pick" ? (
-          <div className="flex min-h-[32rem] flex-col items-center justify-center px-6 py-10 text-center">
+          <div className="flex min-h-[24rem] flex-col items-center justify-center px-6 py-10 text-center md:min-h-[32rem]">
             <Image
               src="/images/icons/icon-uploadproject-photovideo.svg"
               alt="Ikon foto dan video"
@@ -170,14 +170,14 @@ export default function UploadProjectModal({
               priority
             />
 
-            <p className="mt-5 text-[2rem] font-medium leading-[2.5rem] text-[var(--text-black)]">
+            <p className="mt-5 text-[1.25rem] font-medium leading-[1.75rem] text-[var(--text-black)] md:text-[2rem] md:leading-[2.5rem]">
               Tarik foto & video Anda ke sini
             </p>
 
             <button
               type="button"
               onClick={handleChooseFile}
-              className="mt-6 inline-flex h-[3.5rem] min-w-[24rem] items-center justify-center rounded-[0.75rem] bg-[var(--orange-normal)] px-8 text-[1.875rem] font-semibold leading-[2.25rem] text-white transition-colors hover:bg-[var(--orange-dark)]"
+              className="mt-6 inline-flex h-[3.25rem] w-full max-w-[20rem] items-center justify-center rounded-[0.75rem] bg-[var(--orange-normal)] px-6 text-[1rem] font-semibold leading-[1.5rem] text-white transition-colors hover:bg-[var(--orange-dark)] md:h-[3.5rem] md:min-w-[24rem] md:px-8 md:text-[1.5rem] md:leading-[2rem] lg:text-[1.875rem] lg:leading-[2.25rem]"
             >
               Pilih dari Komputer
             </button>
@@ -185,7 +185,7 @@ export default function UploadProjectModal({
         ) : null}
 
         {uploadStep === "preview" ? (
-          <div className="relative min-h-[32rem] bg-[#d9d9dc]">
+          <div className="relative min-h-[24rem] bg-[#d9d9dc] md:min-h-[32rem]">
             {previewUrl ? (
               <Image
                 src={previewUrl}
@@ -243,7 +243,7 @@ export default function UploadProjectModal({
         ) : null}
 
         {uploadStep === "describe" ? (
-          <div className="grid min-h-[32rem] grid-cols-1 md:grid-cols-[1.45fr_1fr]">
+          <div className="grid min-h-[24rem] max-h-[calc(90vh-4rem)] grid-cols-1 overflow-y-auto md:min-h-[32rem] md:grid-cols-[1.45fr_1fr]">
             <div className="relative min-h-[20rem] bg-[#d9d9dc]">
               {previewUrl ? (
                 <Image
@@ -265,7 +265,7 @@ export default function UploadProjectModal({
                   height={64}
                   className="h-16 w-16 rounded-full object-cover"
                 />
-                <p className="text-[2rem] font-semibold leading-[2.5rem] text-[var(--text-black)]">
+                <p className="text-[1.25rem] font-semibold leading-[1.75rem] text-[var(--text-black)] md:text-[2rem] md:leading-[2.5rem]">
                   {contractor.name}
                 </p>
               </div>
@@ -274,7 +274,7 @@ export default function UploadProjectModal({
                 value={projectDescription}
                 onChange={(event) => setProjectDescription(event.target.value)}
                 placeholder="Jelaskan proyek anda.."
-                className="mt-5 min-h-[11rem] w-full rounded-[0.75rem] border border-[var(--white-dark)] bg-transparent p-3 text-[1.75rem] leading-[2.5rem] text-[var(--text-black)] outline-none placeholder:text-[var(--white-dark-hover)]"
+                className="mt-5 min-h-[8rem] w-full rounded-[0.75rem] border border-[var(--white-dark)] bg-transparent p-3 text-[1rem] leading-[1.5rem] text-[var(--text-black)] outline-none placeholder:text-[var(--white-dark-hover)] md:min-h-[11rem] md:text-[1.375rem] md:leading-[2rem] lg:text-[1.75rem] lg:leading-[2.5rem]"
               />
 
               <div className="mt-5 flex items-center justify-between gap-3 rounded-[0.75rem] border border-transparent px-2 py-2">
@@ -283,7 +283,7 @@ export default function UploadProjectModal({
                   value={projectLocation}
                   onChange={(event) => setProjectLocation(event.target.value)}
                   placeholder="Lokasi anda"
-                  className="w-full bg-transparent text-[1.75rem] leading-[2.5rem] text-[var(--text-black)] outline-none placeholder:text-[var(--white-dark-hover)]"
+                  className="w-full bg-transparent text-[1rem] leading-[1.5rem] text-[var(--text-black)] outline-none placeholder:text-[var(--white-dark-hover)] md:text-[1.375rem] md:leading-[2rem] lg:text-[1.75rem] lg:leading-[2.5rem]"
                 />
                 <Image
                   src="/images/icons/icon-lokasi.svg"
@@ -298,7 +298,7 @@ export default function UploadProjectModal({
         ) : null}
 
         {uploadStep === "success" ? (
-          <div className="flex min-h-[32rem] flex-col items-center justify-center px-6 py-10 text-center">
+          <div className="flex min-h-[24rem] flex-col items-center justify-center px-6 py-10 text-center md:min-h-[32rem]">
             <Image
               src="/images/assets/sucsess.png"
               alt="Project berhasil diunggah"
@@ -306,7 +306,7 @@ export default function UploadProjectModal({
               height={240}
               className="h-auto w-[15rem] object-contain"
             />
-            <p className="mt-4 text-[2.25rem] leading-[2.75rem] text-[var(--text-black)]">
+            <p className="mt-4 text-[1.5rem] leading-[2rem] text-[var(--text-black)] md:text-[2.25rem] md:leading-[2.75rem]">
               Proyek telah diunggah
             </p>
 

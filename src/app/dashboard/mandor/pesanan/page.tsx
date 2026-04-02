@@ -223,21 +223,134 @@ export default function MandorPesananPage() {
             className="mt-[0.75rem]"
           />
 
-          <div className="mt-[1rem] overflow-hidden rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)]">
+          <div className="mt-[1rem] space-y-3 md:hidden">
+            {loading ? (
+              <div className="rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] px-4 py-3 text-[0.875rem] text-[var(--text-secondary)]">
+                Memuat data pesanan...
+              </div>
+            ) : null}
+
+            {!loading && errorMessage ? (
+              <div className="rounded-[0.5rem] border border-red-200 bg-red-50 px-4 py-3 text-[0.875rem] text-[var(--red-normal)]">
+                {errorMessage}
+              </div>
+            ) : null}
+
+            {!loading && !errorMessage && !orderList.length ? (
+              <div className="rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] px-4 py-3 text-[0.875rem] text-[var(--text-secondary)]">
+                Belum ada data pesanan.
+              </div>
+            ) : null}
+
+            {!loading &&
+              !errorMessage &&
+              orderList.map((order) => {
+                const clientSummary = clientLookup[order.client_id];
+                const clientName =
+                  clientSummary?.name || `Client #${order.client_id}`;
+                const clientAvatar =
+                  clientSummary?.avatar || "/images/logo-mandorin.svg";
+
+                return (
+                  <article
+                    key={`${activeTab}-${order.id}`}
+                    className="rounded-[0.75rem] border border-[var(--black-light)] bg-[var(--white-normal)] p-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="relative h-[2.75rem] w-[2.75rem] overflow-hidden rounded-full">
+                        <Image
+                          src={clientAvatar}
+                          alt={clientName}
+                          fill
+                          sizes="44px"
+                          className="object-cover"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[1rem] font-medium leading-[1.5rem] text-[var(--text-black)]">
+                          {clientName}
+                        </p>
+                        <p className="mt-0.5 text-[0.813rem] leading-[1.25rem] text-[var(--text-muted)]">
+                          {order.location}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-1.5 text-[0.875rem] text-[var(--text-secondary)]">
+                      <p>Tanggal: {formatDateId(order.date)}</p>
+                    </div>
+
+                    <div className="mt-3">
+                      <span
+                        className={`inline-flex min-w-[6.25rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.875rem] font-semibold leading-[1.25rem] ${getOrderPhaseClassName(order.phase)}`}
+                      >
+                        {statusLabel[order.phase]}
+                      </span>
+                    </div>
+
+                    <div className="mt-3">
+                      {order.phase === "pending" ? (
+                        <Link
+                          href={`/dashboard/mandor/pesanan/${order.id}`}
+                          className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] text-[0.938rem] font-semibold text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                        >
+                          Detail
+                        </Link>
+                      ) : order.phase === "approved" ? (
+                        <Link
+                          href={`/dashboard/mandor/pesanan/${order.id}/target?clientId=${order.client_id}&foremanId=${order.foreman_id}`}
+                          className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] text-[0.938rem] font-semibold text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                        >
+                          Buat Proposal
+                        </Link>
+                      ) : order.phase === "proposal_submitted" ? (
+                        <AppButton
+                          type="button"
+                          disabled
+                          variant="ghost"
+                          className="h-[2.5rem] w-full"
+                        >
+                          Menunggu Klien
+                        </AppButton>
+                      ) : order.phase === "rejected" ? (
+                        <AppButton
+                          type="button"
+                          disabled
+                          variant="ghost"
+                          className="h-[2.5rem] w-full"
+                        >
+                          Ditolak
+                        </AppButton>
+                      ) : (
+                        <Link
+                          href="/dashboard/mandor/projects"
+                          className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white px-[1rem] text-[0.938rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+                        >
+                          Masuk Proyek
+                        </Link>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+          </div>
+
+          <div className="mt-[1rem] hidden overflow-hidden rounded-[0.5rem] border border-[var(--black-light)] bg-[var(--white-normal)] md:block">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[42rem] border-collapse">
                 <thead className="bg-[var(--orange-normal)] text-[var(--text-white)]">
                   <tr>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Nama
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Tanggal
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-left text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-left text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Status
                     </th>
-                    <th className="px-[1rem] py-[0.5rem] text-right text-[1.125rem] font-semibold leading-[1.75rem]">
+                    <th className="px-[1rem] py-[0.5rem] text-right text-[1rem] font-semibold leading-[1.5rem] lg:text-[1.125rem] lg:leading-[1.75rem]">
                       Aksi
                     </th>
                   </tr>
@@ -280,7 +393,7 @@ export default function MandorPesananPage() {
                               </div>
 
                               <div>
-                                <p className="text-[1.125rem] font-medium leading-[1.75rem] text-[var(--text-black)]">
+                                <p className="text-[1rem] font-medium leading-[1.5rem] text-[var(--text-black)] lg:text-[1.125rem] lg:leading-[1.75rem]">
                                   {clientName}
                                 </p>
                                 <p className="text-[0.875rem] leading-[1.25rem] text-[var(--text-muted)]">
@@ -290,13 +403,13 @@ export default function MandorPesananPage() {
                             </div>
                           </td>
 
-                          <td className="px-[1rem] py-[0.5rem] text-[1.125rem] leading-[1.75rem] text-[var(--text-secondary)]">
+                          <td className="px-[1rem] py-[0.5rem] text-[1rem] leading-[1.5rem] text-[var(--text-secondary)] lg:text-[1.125rem] lg:leading-[1.75rem]">
                             {formatDateId(order.date)}
                           </td>
 
                           <td className="px-[1rem] py-[0.5rem]">
                             <span
-                              className={`inline-flex min-w-[6.5rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] ${getOrderPhaseClassName(order.phase)}`}
+                              className={`inline-flex min-w-[6.5rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] lg:text-[1rem] ${getOrderPhaseClassName(order.phase)}`}
                             >
                               {statusLabel[order.phase]}
                             </span>
@@ -306,14 +419,14 @@ export default function MandorPesananPage() {
                             {order.phase === "pending" ? (
                               <Link
                                 href={`/dashboard/mandor/pesanan/${order.id}`}
-                                className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                                className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
                               >
                                 Detail
                               </Link>
                             ) : order.phase === "approved" ? (
                               <Link
                                 href={`/dashboard/mandor/pesanan/${order.id}/target?clientId=${order.client_id}&foremanId=${order.foreman_id}`}
-                                className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
+                                className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
                               >
                                 Buat Proposal
                               </Link>
@@ -328,7 +441,7 @@ export default function MandorPesananPage() {
                             ) : (
                               <Link
                                 href="/dashboard/mandor/projects"
-                                className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white px-[1rem] py-[0.375rem] text-[1rem] font-semibold leading-[1.5rem] text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)]"
+                                className="inline-flex min-w-[6.75rem] justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-white px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] lg:text-[1rem]"
                               >
                                 Masuk Proyek
                               </Link>
@@ -340,8 +453,6 @@ export default function MandorPesananPage() {
                 </tbody>
               </table>
             </div>
-
-            <div className="h-[12rem] w-full bg-[var(--white-normal)] md:h-[14rem]" />
           </div>
         </section>
       </main>
