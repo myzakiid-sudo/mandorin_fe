@@ -17,9 +17,6 @@ import {
 } from "@/lib/proposal-api";
 import { formatCurrencyIdr, formatDateId } from "@/lib/utils";
 
-const DEV_SKIP_MIDTRANS =
-  process.env.NEXT_PUBLIC_DEV_SKIP_MIDTRANS?.trim().toLowerCase() === "true";
-
 function ReadonlyTargetInput({
   label,
   value,
@@ -66,17 +63,13 @@ export default function ClientTargetPengerjaanPage() {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [infoMessage, setInfoMessage] = useState("");
   const [isSavingDecision, setIsSavingDecision] = useState(false);
-  const [isReadyToPay, setIsReadyToPay] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-  const [isDevBypassed, setIsDevBypassed] = useState(false);
 
   const isProposalApproved = isProposalApprovedStatus(proposal?.status);
   const isProposalRejected = isProposalRejectedStatus(proposal?.status);
   const isDecisionFinal = isProposalApproved || isProposalRejected;
-  const canProceedToProjects =
-    isProposalApproved || (DEV_SKIP_MIDTRANS && isDevBypassed);
+  const canProceedToProjects = isProposalApproved;
 
   useEffect(() => {
     let isCancelled = false;
@@ -128,36 +121,13 @@ export default function ClientTargetPengerjaanPage() {
     };
   }, [clearSession, proposalId, router]);
 
-  const handleApproveProposal = async () => {
-    if (!orderId || !proposal || isSavingDecision || isDecisionFinal) {
-      return;
-    }
-
-    setIsSavingDecision(true);
-    setErrorMessage("");
-    setInfoMessage("");
-    setIsReadyToPay(true);
-    setIsSavingDecision(false);
-  };
-
-  const handlePayProposal = async () => {
-    if (!proposal || isPaying || isDecisionFinal || !isReadyToPay) {
+  const handleApproveAndPayProposal = async () => {
+    if (!proposal || isPaying || isSavingDecision || isDecisionFinal) {
       return;
     }
 
     setIsPaying(true);
     setErrorMessage("");
-    setInfoMessage("");
-
-    if (DEV_SKIP_MIDTRANS) {
-      setIsDevBypassed(true);
-      setInfoMessage(
-        "Mode developer aktif: pembayaran Midtrans dilewati untuk testing alur lanjutan. Status proposal backend tidak diubah pada mode ini.",
-      );
-
-      setIsPaying(false);
-      return;
-    }
 
     try {
       const paymentResult = await payProposal(String(proposal.id));
@@ -343,18 +313,9 @@ export default function ClientTargetPengerjaanPage() {
             />
 
             <p className="mt-2 text-[0.75rem] leading-[1.125rem] text-[var(--text-muted)] md:text-[0.875rem] mb-6 border-b pb-8 border-transparent">
-              Setelah klik Setuju, lanjutkan dengan tombol Bayar untuk membuka
-              halaman Midtrans.
-              {DEV_SKIP_MIDTRANS
-                ? " Mode developer aktif: tombol Bayar akan melewati Midtrans."
-                : ""}
+              Klik tombol Setuju dan Bayar untuk membuat sesi pembayaran dan
+              melanjutkan ke halaman Midtrans.
             </p>
-
-            {infoMessage ? (
-              <p className="text-[0.875rem] text-[var(--green-normal)]">
-                {infoMessage}
-              </p>
-            ) : null}
 
             {errorMessage ? (
               <p className="text-[0.875rem] text-[var(--red-normal)]">
@@ -365,17 +326,15 @@ export default function ClientTargetPengerjaanPage() {
             <div className="flex flex-col items-center gap-3 md:flex-row md:justify-center">
               <button
                 type="button"
-                onClick={handleApproveProposal}
-                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--green-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:max-w-[11rem]"
-                disabled={isSavingDecision || isDecisionFinal}
+                onClick={handleApproveAndPayProposal}
+                className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--green-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--green-dark)] disabled:cursor-not-allowed disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:max-w-[14rem]"
+                disabled={isPaying || isSavingDecision || isDecisionFinal}
               >
-                {isSavingDecision
-                  ? "Menyimpan..."
+                {isPaying
+                  ? "Membuat Pembayaran..."
                   : isDecisionFinal
                     ? "Keputusan Tersimpan"
-                    : isReadyToPay
-                      ? "Disetujui"
-                      : "Setuju"}
+                    : "Setuju dan Bayar"}
               </button>
 
               <button
@@ -391,23 +350,6 @@ export default function ClientTargetPengerjaanPage() {
                     : "Tolak"}
               </button>
             </div>
-
-            {!isProposalApproved && !isProposalRejected ? (
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={handlePayProposal}
-                  className="inline-flex h-[2.75rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] bg-[var(--orange-normal)] px-5 text-[0.938rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-bg)] disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] sm:max-w-[23rem]"
-                  disabled={!isReadyToPay || isPaying || isSavingDecision}
-                >
-                  {isPaying
-                    ? "Membuat Pembayaran..."
-                    : DEV_SKIP_MIDTRANS
-                      ? "Lewati Pembayaran (Dev)"
-                      : "Bayar via Midtrans"}
-                </button>
-              </div>
-            ) : null}
 
             {canProceedToProjects ? (
               <div className="flex justify-center">

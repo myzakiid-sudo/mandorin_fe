@@ -355,9 +355,7 @@ export async function payProposal(id: string): Promise<ProposalPayResult> {
       method: "PATCH",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify({}),
     },
   );
 
