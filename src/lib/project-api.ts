@@ -169,6 +169,34 @@ export async function getProjectById(id: string): Promise<Project> {
   return payload.data;
 }
 
+export async function updateProjectStatus(
+  projectId: string,
+  status: ProjectStatus,
+): Promise<Project> {
+  const { response, payload } = await requestJson<ProjectDetailResponse>(
+    `${API_BASE_URL}/projects/${encodeURIComponent(projectId)}`,
+    {
+      auth: true,
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ status }),
+    },
+  );
+
+  if (isAuthFailure(response.status, payload?.message)) {
+    throw new ProjectAuthError(payload?.message);
+  }
+
+  if (!response.ok || payload?.success !== true || !payload.data) {
+    throw new Error(payload?.message || "Gagal memperbarui status proyek.");
+  }
+
+  return payload.data;
+}
+
 export async function getProjectMilestones(
   projectId: string,
 ): Promise<ProjectMilestone[]> {

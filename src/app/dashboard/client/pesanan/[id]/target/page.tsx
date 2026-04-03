@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import PublicNavbar from "@/components/features/public/navbar";
 import { useAuth } from "@/context/auth-context";
@@ -63,20 +63,62 @@ export default function ClientTargetPengerjaanPage() {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
   const [isSavingDecision, setIsSavingDecision] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
 
   const isProposalApproved = isProposalApprovedStatus(proposal?.status);
   const isProposalRejected = isProposalRejectedStatus(proposal?.status);
   const isDecisionFinal = isProposalApproved || isProposalRejected;
   const canProceedToProjects = isProposalApproved;
 
+  const refreshProposalStatus = useCallback(
+    async ({ withLoading = false }: { withLoading?: boolean } = {}) => {
+      if (!proposalId) {
+        return null;
+      }
+
+      if (withLoading) {
+        setLoading(true);
+        setErrorMessage("");
+      }
+
+      try {
+        const data = await getProposalById(proposalId);
+        setProposal(data);
+        return data;
+      } catch (error) {
+        if (error instanceof ProposalAuthError) {
+          clearSession();
+          router.replace("/login");
+          return null;
+        }
+
+        if (withLoading) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat detail proposal.",
+          );
+        }
+
+        return null;
+      } finally {
+        if (withLoading) {
+          setLoading(false);
+        }
+      }
+    },
+    [clearSession, proposalId, router],
+  );
+
   useEffect(() => {
     let isCancelled = false;
 
     const loadProposal = async () => {
-      setLoading(true);
       setErrorMessage("");
+      setInfoMessage("");
 
       if (!proposalId) {
         setErrorMessage("ID proposal tidak valid.");
@@ -84,33 +126,10 @@ export default function ClientTargetPengerjaanPage() {
         return;
       }
 
-      try {
-        const data = await getProposalById(proposalId);
-        if (isCancelled) {
-          return;
-        }
+      const data = await refreshProposalStatus({ withLoading: true });
 
-        setProposal(data);
-      } catch (error) {
-        if (isCancelled) {
-          return;
-        }
-
-        if (error instanceof ProposalAuthError) {
-          clearSession();
-          router.replace("/login");
-          return;
-        }
-
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Gagal memuat detail proposal.",
-        );
-      } finally {
-        if (!isCancelled) {
-          setLoading(false);
-        }
+      if (isCancelled || !data) {
+        return;
       }
     };
 
@@ -119,7 +138,63 @@ export default function ClientTargetPengerjaanPage() {
     return () => {
       isCancelled = true;
     };
-  }, [clearSession, proposalId, router]);
+  }, [proposalId, refreshProposalStatus]);
+
+  useEffect(() => {
+    if (!proposalId || isDecisionFinal) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const checkStatus = async () => {
+      setIsCheckingPayment(true);
+
+      try {
+        const latest = await refreshProposalStatus();
+
+        if (isCancelled || !latest) {
+          return;
+        }
+
+        if (isProposalApprovedStatus(latest.status)) {
+          setInfoMessage(
+            (previous) =>
+              previous ||
+              "Pembayaran terdeteksi. Kamu bisa lanjut ke halaman Proyek Saya.",
+          );
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsCheckingPayment(false);
+        }
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void checkStatus();
+    }, 10000);
+
+    const handleWindowFocus = () => {
+      void checkStatus();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void checkStatus();
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isDecisionFinal, proposalId, refreshProposalStatus]);
 
   const handleApproveAndPayProposal = async () => {
     if (!proposal || isPaying || isSavingDecision || isDecisionFinal) {
@@ -128,8 +203,24 @@ export default function ClientTargetPengerjaanPage() {
 
     setIsPaying(true);
     setErrorMessage("");
+    setInfoMessage("");
+
+    let paymentTab: Window | null = null;
 
     try {
+      paymentTab = window.open("about:blank", "_blank");
+
+      if (!paymentTab) {
+        setErrorMessage(
+          "Pop-up diblokir browser. Izinkan pop-up lalu klik Setuju dan Bayar lagi.",
+        );
+        return;
+      }
+
+      paymentTab.document.write(
+        '<title>Memproses Pembayaran</title><p style="font-family:sans-serif;padding:16px">Membuka halaman pembayaran Midtrans...</p>',
+      );
+
       const paymentResult = await payProposal(String(proposal.id));
 
       if (
@@ -149,9 +240,15 @@ export default function ClientTargetPengerjaanPage() {
       }
 
       if (paymentResult.paymentUrl) {
-        window.location.href = paymentResult.paymentUrl;
+        paymentTab.location.replace(paymentResult.paymentUrl);
+        router.push("/dashboard/client/pesanan");
         return;
       }
+
+      if (!paymentTab.closed) {
+        paymentTab.close();
+      }
+      paymentTab = null;
 
       const refreshedProposal = await getProposalById(String(proposal.id));
       setProposal(refreshedProposal);
@@ -165,6 +262,10 @@ export default function ClientTargetPengerjaanPage() {
         );
       }
     } catch (error) {
+      if (paymentTab && !paymentTab.closed) {
+        paymentTab.close();
+      }
+
       if (error instanceof ProposalAuthError) {
         setErrorMessage(
           error.message ||
@@ -314,8 +415,21 @@ export default function ClientTargetPengerjaanPage() {
 
             <p className="mt-2 text-[0.75rem] leading-[1.125rem] text-[var(--text-muted)] md:text-[0.875rem] mb-6 border-b pb-8 border-transparent">
               Klik tombol Setuju dan Bayar untuk membuat sesi pembayaran dan
-              melanjutkan ke halaman Midtrans.
+              membuka Midtrans di tab baru. Tab ini akan kembali ke Riwayat
+              Pesanan.
             </p>
+
+            {infoMessage ? (
+              <p className="text-[0.875rem] text-[var(--blue-normal-active)]">
+                {infoMessage}
+              </p>
+            ) : null}
+
+            {isCheckingPayment && !isDecisionFinal ? (
+              <p className="text-[0.813rem] text-[var(--text-muted)]">
+                Memeriksa status pembayaran terbaru...
+              </p>
+            ) : null}
 
             {errorMessage ? (
               <p className="text-[0.875rem] text-[var(--red-normal)]">

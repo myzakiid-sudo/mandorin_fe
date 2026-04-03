@@ -66,7 +66,6 @@ export default function TargetTahapanPengerjaanPage() {
   const { clearSession } = useAuth();
 
   const [title, setTitle] = useState("");
-  const [surveyDate, setSurveyDate] = useState("");
   const [deadline, setDeadline] = useState("");
   const [location, setLocation] = useState("");
   const [whatsAppNumber, setWhatsAppNumber] = useState("");
@@ -74,20 +73,8 @@ export default function TargetTahapanPengerjaanPage() {
   const [budget, setBudget] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [content, setContent] = useState("");
-  const [terms, setTerms] = useState("");
-  const [mainStages, setMainStages] = useState(["", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const handleStageChange = (index: number, value: string) => {
-    setMainStages((prev) =>
-      prev.map((stage, stageIndex) => (stageIndex === index ? value : stage)),
-    );
-  };
-
-  const handleAddStage = () => {
-    setMainStages((prev) => [...prev, ""]);
-  };
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -111,20 +98,12 @@ export default function TargetTahapanPengerjaanPage() {
     }
 
     if (!photoFile) {
-      setErrorMessage("Foto proposal wajib diunggah.");
+      setErrorMessage("Foto tahapan awal wajib diunggah.");
       return;
     }
 
-    const stageLines = mainStages
-      .map((stage) => stage.trim())
-      .filter(Boolean)
-      .map((stage, index) => `${index + 1}. ${stage}`);
-
     const proposalContent = [
       content.trim(),
-      stageLines.length ? `Urutan Tahapan:\n${stageLines.join("\n")}` : "",
-      terms.trim() ? `Syarat Tahapan:\n${terms.trim()}` : "",
-      surveyDate ? `Tanggal Survei: ${surveyDate}` : "",
       whatsAppNumber.trim() ? `Kontak WhatsApp: ${whatsAppNumber.trim()}` : "",
     ]
       .filter(Boolean)
@@ -204,7 +183,7 @@ export default function TargetTahapanPengerjaanPage() {
       <main className="mx-auto w-full max-w-[90rem] flex-1 px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
         <section className="mx-auto max-w-[65rem] rounded-[1rem] border border-[var(--black-light)] bg-white px-[1.5rem] py-[2rem] shadow-[0_0.375rem_1.25rem_rgba(0,0,0,0.06)] md:px-[4rem] md:py-[3rem]">
           <h1 className="text-center text-[1.5rem] font-semibold leading-[2rem] text-[var(--text-black)] md:text-[2rem] md:leading-[2.5rem]">
-            Target Tahapan Pengerjaan
+            Proposal Project
           </h1>
 
           <form
@@ -219,23 +198,14 @@ export default function TargetTahapanPengerjaanPage() {
               required
             />
 
-            <div className="grid grid-cols-1 gap-[1.25rem] md:grid-cols-2">
-              <InputTarget
-                label="Tanggal Survei"
-                name="surveyDate"
-                type="date"
-                value={surveyDate}
-                onChange={setSurveyDate}
-              />
-              <InputTarget
-                label="Target Tanggal Selesai"
-                name="deadline"
-                type="date"
-                value={deadline}
-                onChange={setDeadline}
-                required
-              />
-            </div>
+            <InputTarget
+              label="Target Tanggal Selesai"
+              name="deadline"
+              type="date"
+              value={deadline}
+              onChange={setDeadline}
+              required
+            />
 
             <div className="grid grid-cols-1 gap-[1.25rem] md:grid-cols-2">
               <InputTarget
@@ -275,7 +245,7 @@ export default function TargetTahapanPengerjaanPage() {
 
             <label className="flex flex-col gap-[0.5rem]">
               <span className="text-[0.938rem] font-medium leading-[1.5rem] text-[var(--text-black)] md:text-[1rem]">
-                Foto Proposal
+                Foto Tahapan Awal
               </span>
               <input
                 name="photo"
@@ -298,49 +268,6 @@ export default function TargetTahapanPengerjaanPage() {
               value={content}
               onChange={setContent}
               required
-            />
-
-            <div className="mt-4 flex flex-col gap-[1.25rem]">
-              <h3 className="text-[1.125rem] font-semibold text-[var(--text-black)]">
-                Urutan Tahapan
-              </h3>
-
-              {mainStages.map((stage, index) => (
-                <label
-                  key={`tahapan-${index + 1}`}
-                  className="flex flex-col gap-[0.5rem]"
-                >
-                  <span className="text-[0.938rem] font-medium leading-[1.5rem] text-[var(--text-black)] md:text-[1rem]">
-                    Tahapan {index + 1}
-                  </span>
-                  <input
-                    type="text"
-                    value={stage}
-                    onChange={(event) =>
-                      handleStageChange(index, event.target.value)
-                    }
-                    placeholder="Isi tahapan pengerjaan"
-                    className="h-[2.5rem] rounded-[0.375rem] border border-[var(--black-light-active)] bg-white px-[0.75rem] text-[0.938rem] leading-[1.375rem] text-[var(--text-black)] outline-none transition-colors focus:border-[var(--orange-normal)] md:h-[2.75rem] md:text-[1rem]"
-                  />
-                </label>
-              ))}
-
-              <button
-                type="button"
-                onClick={handleAddStage}
-                className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--orange-normal)] text-[0.875rem] font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] sm:max-w-[13rem]"
-              >
-                + Tambah Tahapan
-              </button>
-            </div>
-
-            <InputTarget
-              label="Syarat Tahapan"
-              name="terms"
-              type="textarea"
-              rows={2}
-              value={terms}
-              onChange={setTerms}
             />
 
             {errorMessage ? (

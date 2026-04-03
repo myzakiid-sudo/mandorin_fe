@@ -153,7 +153,20 @@ export default function ClientProjectsPage() {
                     </p>
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {isCompletedProject(project.status) ? (
+                      <Link
+                        href={`/dashboard/client/projects/${project.id}/review?foremanId=${project.foreman_id}`}
+                        className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--green-normal)] bg-white px-[1rem] text-[0.938rem] font-semibold text-[var(--green-normal)] transition-colors hover:bg-[var(--green-light)]"
+                      >
+                        Beri Review
+                      </Link>
+                    ) : (
+                      <span className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--btn-disabled-text)] bg-[var(--btn-disabled-bg)] px-[1rem] text-[0.938rem] font-semibold text-[var(--btn-disabled-text)]">
+                        Beri Review
+                      </span>
+                    )}
+
                     <Link
                       href={`/dashboard/client/projects/${project.id}`}
                       className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] text-[0.938rem] font-semibold text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
@@ -235,12 +248,27 @@ export default function ClientProjectsPage() {
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-right">
-                        <Link
-                          href={`/dashboard/client/projects/${project.id}`}
-                          className="inline-flex min-w-[5.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
-                        >
-                          Detail
-                        </Link>
+                        <div className="flex items-center justify-end gap-2">
+                          {isCompletedProject(project.status) ? (
+                            <Link
+                              href={`/dashboard/client/projects/${project.id}/review?foremanId=${project.foreman_id}`}
+                              className="inline-flex min-w-[7rem] justify-center rounded-[0.5rem] border border-[var(--green-normal)] bg-white px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--green-normal)] transition-colors hover:bg-[var(--green-light)] lg:text-[1rem]"
+                            >
+                              Beri Review
+                            </Link>
+                          ) : (
+                            <span className="inline-flex min-w-[7rem] justify-center rounded-[0.5rem] border border-[var(--btn-disabled-text)] bg-[var(--btn-disabled-bg)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--btn-disabled-text)] lg:text-[1rem]">
+                              Beri Review
+                            </span>
+                          )}
+
+                          <Link
+                            href={`/dashboard/client/projects/${project.id}`}
+                            className="inline-flex min-w-[5.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
+                          >
+                            Detail
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}

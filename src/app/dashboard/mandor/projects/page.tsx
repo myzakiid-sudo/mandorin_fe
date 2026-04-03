@@ -6,7 +6,12 @@ import { useCallback, useMemo, useState } from "react";
 import PublicNavbar from "@/components/features/public/navbar";
 import { TableQueryStateRows } from "@/components/ui/table-query-state-rows";
 import { useAuth } from "@/context/auth-context";
-import { getProjects, ProjectAuthError, type Project } from "@/lib/project-api";
+import {
+  getProjects,
+  ProjectAuthError,
+  type Project,
+  updateProjectStatus,
+} from "@/lib/project-api";
 import { formatCurrencyIdr, formatDateId } from "@/lib/utils";
 import { useAsyncQuery } from "@/hooks/use-async-query";
 
@@ -23,6 +28,11 @@ const isCompletedProject = (status: string) =>
 export default function MandorProjectsPage() {
   const { authSession, clearSession } = useAuth();
   const [activeTab, setActiveTab] = useState<ProjectTab>("berlangsung");
+  const [updatingProjectId, setUpdatingProjectId] = useState<number | null>(
+    null,
+  );
+  const [actionMessage, setActionMessage] = useState("");
+  const [actionError, setActionError] = useState("");
 
   const handleAuthError = useCallback(() => {
     clearSession();
@@ -30,6 +40,7 @@ export default function MandorProjectsPage() {
 
   const {
     data: projects,
+    setData: setProjects,
     loading,
     error,
   } = useAsyncQuery<Project[]>({
@@ -48,6 +59,57 @@ export default function MandorProjectsPage() {
         : "Gagal memuat daftar proyek.";
     },
   });
+
+  const handleCompleteProject = async (project: Project) => {
+    if (updatingProjectId || isCompletedProject(project.status)) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Tandai proyek \"${project.title}\" sebagai selesai?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActionMessage("");
+    setActionError("");
+    setUpdatingProjectId(project.id);
+
+    try {
+      const updatedProject = await updateProjectStatus(
+        String(project.id),
+        "SELESAI",
+      );
+
+      setProjects((prev) =>
+        prev.map((item) =>
+          item.id === project.id
+            ? {
+                ...item,
+                status: updatedProject.status,
+              }
+            : item,
+        ),
+      );
+
+      setActionMessage(`Project ${project.title} berhasil diselesaikan.`);
+    } catch (fetchError) {
+      if (fetchError instanceof ProjectAuthError) {
+        handleAuthError();
+        return;
+      }
+
+      setActionError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : "Gagal menyelesaikan project.",
+      );
+    } finally {
+      setUpdatingProjectId(null);
+    }
+  };
 
   const projectList = useMemo(
     () =>
@@ -89,6 +151,18 @@ export default function MandorProjectsPage() {
               );
             })}
           </div>
+
+          {actionMessage ? (
+            <p className="mt-3 text-[0.875rem] text-[var(--green-normal)]">
+              {actionMessage}
+            </p>
+          ) : null}
+
+          {actionError ? (
+            <p className="mt-3 text-[0.875rem] text-[var(--red-normal)]">
+              {actionError}
+            </p>
+          ) : null}
 
           <div className="mt-[1rem] space-y-3 md:hidden">
             {loading ? (
@@ -148,7 +222,23 @@ export default function MandorProjectsPage() {
                     </p>
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCompleteProject(project)}
+                      disabled={
+                        updatingProjectId === project.id ||
+                        isCompletedProject(project.status)
+                      }
+                      className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--green-normal)] bg-white px-[1rem] text-[0.938rem] font-semibold text-[var(--green-normal)] transition-colors hover:bg-[var(--green-light)] disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-text)] disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)]"
+                    >
+                      {updatingProjectId === project.id
+                        ? "Menyimpan..."
+                        : isCompletedProject(project.status)
+                          ? "Sudah Selesai"
+                          : "Selesaikan"}
+                    </button>
+
                     <Link
                       href={`/dashboard/mandor/projects/${project.id}`}
                       className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] text-[0.938rem] font-semibold text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)]"
@@ -230,12 +320,30 @@ export default function MandorProjectsPage() {
                       </td>
 
                       <td className="px-[1rem] py-[0.5rem] text-right">
-                        <Link
-                          href={`/dashboard/mandor/projects/${project.id}`}
-                          className="inline-flex min-w-[5.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
-                        >
-                          Detail
-                        </Link>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleCompleteProject(project)}
+                            disabled={
+                              updatingProjectId === project.id ||
+                              isCompletedProject(project.status)
+                            }
+                            className="inline-flex min-w-[7rem] justify-center rounded-[0.5rem] border border-[var(--green-normal)] bg-white px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--green-normal)] transition-colors hover:bg-[var(--green-light)] disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-text)] disabled:bg-[var(--btn-disabled-bg)] disabled:text-[var(--btn-disabled-text)] lg:text-[1rem]"
+                          >
+                            {updatingProjectId === project.id
+                              ? "Menyimpan..."
+                              : isCompletedProject(project.status)
+                                ? "Sudah Selesai"
+                                : "Selesaikan"}
+                          </button>
+
+                          <Link
+                            href={`/dashboard/mandor/projects/${project.id}`}
+                            className="inline-flex min-w-[5.25rem] justify-center rounded-[0.5rem] bg-[var(--orange-normal)] px-[1rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--text-white)] transition-colors hover:bg-[var(--orange-normal-hover)] lg:text-[1rem]"
+                          >
+                            Detail
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}

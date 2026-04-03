@@ -13,13 +13,17 @@ import {
   ReviewAuthError,
   type Review,
 } from "@/lib/review-api";
+import { getProjectById, ProjectAuthError } from "@/lib/project-api";
 
 export default function ClientProjectReviewPage() {
   const router = useRouter();
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const { authSession, clearSession } = useAuth();
   const foremanIdFromQuery = searchParams.get("foremanId")?.trim() ?? "";
+  const [fallbackForemanId, setFallbackForemanId] = useState<number | null>(
+    null,
+  );
   const [rating, setRating] = useState(0);
   const [recommendation, setRecommendation] = useState<"yes" | "no" | "">("");
   const [review, setReview] = useState("");
@@ -65,9 +69,78 @@ export default function ClientProjectReviewPage() {
     };
   }, [authSession?.userId, clearSession, router]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const parsedForemanId = Number(foremanIdFromQuery);
+    if (Number.isFinite(parsedForemanId) && parsedForemanId > 0) {
+      setFallbackForemanId(null);
+      return;
+    }
+
+    const projectId = String(params?.id ?? "").trim();
+    if (!projectId) {
+      return;
+    }
+
+    const loadForemanFromProject = async () => {
+      try {
+        const project = await getProjectById(projectId);
+
+        if (cancelled) {
+          return;
+        }
+
+        const candidateForemanIds = [
+          Number(project.foreman_id),
+          Number(project.foreman?.user_id ?? ""),
+          Number(project.foreman?.id ?? ""),
+        ];
+
+        const resolved =
+          candidateForemanIds.find(
+            (value) => Number.isFinite(value) && value > 0,
+          ) ?? null;
+
+        setFallbackForemanId(resolved);
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        if (
+          error instanceof ReviewAuthError ||
+          error instanceof ProjectAuthError
+        ) {
+          clearSession();
+          router.replace("/login");
+        }
+      }
+    };
+
+    void loadForemanFromProject();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clearSession, foremanIdFromQuery, params?.id, router]);
+
+  const resolvedForemanId = useMemo(() => {
+    const parsedForemanId = Number(foremanIdFromQuery);
+    if (Number.isFinite(parsedForemanId) && parsedForemanId > 0) {
+      return parsedForemanId;
+    }
+
+    return fallbackForemanId;
+  }, [fallbackForemanId, foremanIdFromQuery]);
+
   const canSubmit = useMemo(
-    () => rating > 0 && recommendation !== "" && review.trim().length > 0,
-    [rating, recommendation, review],
+    () =>
+      rating > 0 &&
+      recommendation !== "" &&
+      review.trim().length > 0 &&
+      Boolean(resolvedForemanId),
+    [rating, recommendation, resolvedForemanId, review],
   );
 
   const handleSubmit = async () => {
@@ -76,7 +149,7 @@ export default function ClientProjectReviewPage() {
     }
 
     const clientId = Number(authSession?.userId);
-    const foremanId = Number(foremanIdFromQuery);
+    const foremanId = Number(resolvedForemanId);
 
     if (!Number.isFinite(clientId) || clientId <= 0) {
       setActionError("Sesi user tidak valid. Silakan login ulang.");

@@ -14,6 +14,7 @@ import {
   type Appointment,
 } from "@/lib/appointment-api";
 import { getForemanById } from "@/lib/foreman-api";
+import { getProjects, ProjectAuthError, type Project } from "@/lib/project-api";
 import {
   type Proposal,
   normalizeProposalStatus,
@@ -100,9 +101,45 @@ const getProposalStatusMeta = (status?: string) => {
   return null;
 };
 
+const isProposalPaidStatus = (status?: string) =>
+  normalizeProposalStatus(status) === "DIBAYAR";
+
+const normalizeLocationKey = (value?: string) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+const resolveProjectForOrder = (
+  order: Appointment,
+  projects: Project[],
+): Project | null => {
+  const normalizedLocation = normalizeLocationKey(order.location);
+  const candidates = projects
+    .filter(
+      (project) =>
+        project.client_id === order.client_id &&
+        project.foreman_id === order.foreman_id,
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  const strictMatch = candidates.find(
+    (project) => normalizeLocationKey(project.location) === normalizedLocation,
+  );
+
+  return strictMatch ?? candidates[0] ?? null;
+};
+
 export default function ClientPesananPage() {
   const router = useRouter();
-  const { clearSession } = useAuth();
+  const { authSession, clearSession } = useAuth();
   const [activeTab, setActiveTab] = useState<OrderTab>("berlangsung");
 
   const handleAuthError = useCallback(() => {
@@ -157,6 +194,20 @@ export default function ClientPesananPage() {
 
   const { data: proposals } = useProposals({ onAuthError: handleAuthError });
 
+  const { data: projects } = useAsyncQuery<Project[]>({
+    initialData: [],
+    deps: [authSession?.userId],
+    enabled: Boolean(authSession?.userId),
+    queryFn: async () => getProjects(authSession?.userId),
+    mapError: (fetchError) => {
+      if (fetchError instanceof ProjectAuthError) {
+        handleAuthError();
+      }
+
+      return "";
+    },
+  });
+
   const proposalByOrder = useMemo(() => {
     const mapping: Record<string, Proposal | null> = {};
 
@@ -167,14 +218,31 @@ export default function ClientPesananPage() {
     return mapping;
   }, [appointments, proposals]);
 
+  const projectByOrder = useMemo(() => {
+    const mapping: Record<string, Project | null> = {};
+
+    for (const order of appointments) {
+      mapping[String(order.id)] = resolveProjectForOrder(order, projects);
+    }
+
+    return mapping;
+  }, [appointments, projects]);
+
   const orderList = useMemo(
     () =>
-      appointments.filter((appointment) =>
-        activeTab === "berlangsung"
-          ? !isCompletedStatus(appointment.status)
-          : isCompletedStatus(appointment.status),
-      ),
-    [activeTab, appointments],
+      appointments.filter((appointment) => {
+        const matchedProposal = proposalByOrder[String(appointment.id)];
+        const matchedProject = projectByOrder[String(appointment.id)];
+        const isCompletedOrder =
+          isCompletedStatus(appointment.status) ||
+          isProposalPaidStatus(matchedProposal?.status) ||
+          Boolean(matchedProject);
+
+        return activeTab === "berlangsung"
+          ? !isCompletedOrder
+          : isCompletedOrder;
+      }),
+    [activeTab, appointments, proposalByOrder, projectByOrder],
   );
 
   return (
@@ -229,6 +297,19 @@ export default function ClientPesananPage() {
                 const proposalStatusMeta = getProposalStatusMeta(
                   matchedProposal?.status,
                 );
+                const matchedProject = projectByOrder[String(order.id)];
+                const canReviewProject =
+                  activeTab === "selesai" && Boolean(matchedProject);
+                const reviewHref = matchedProject
+                  ? `/dashboard/client/projects/${matchedProject.id}/review?foremanId=${matchedProject.foreman_id}`
+                  : "";
+                const displayedOrderStatus = isProposalPaidStatus(
+                  matchedProposal?.status,
+                )
+                  ? "SELESAI"
+                  : matchedProject
+                    ? "SELESAI"
+                    : order.status;
                 const canCheckProposal =
                   order.status === "DISETUJUI" && Boolean(proposalId);
 
@@ -264,9 +345,9 @@ export default function ClientPesananPage() {
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <span
-                        className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.875rem] font-semibold leading-[1.25rem] ${getStatusClassName(order.status)}`}
+                        className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.875rem] font-semibold leading-[1.25rem] ${getStatusClassName(displayedOrderStatus)}`}
                       >
-                        {getStatusLabel(order.status)}
+                        {getStatusLabel(displayedOrderStatus)}
                       </span>
 
                       {proposalStatusMeta ? (
@@ -278,7 +359,7 @@ export default function ClientPesananPage() {
                       ) : null}
                     </div>
 
-                    <div className="mt-3">
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       {canCheckProposal ? (
                         <Link
                           href={`/dashboard/client/pesanan/${order.id}/target${proposalId ? `?proposalId=${proposalId}` : ""}`}
@@ -291,6 +372,15 @@ export default function ClientPesananPage() {
                           Cek Proposal
                         </span>
                       )}
+
+                      {canReviewProject ? (
+                        <Link
+                          href={reviewHref}
+                          className="inline-flex h-[2.5rem] w-full items-center justify-center rounded-[0.5rem] border border-[var(--green-normal)] bg-white px-[0.875rem] text-[0.938rem] font-semibold text-[var(--green-normal)] transition-colors hover:bg-[var(--green-light)]"
+                        >
+                          Beri Review
+                        </Link>
+                      ) : null}
                     </div>
                   </article>
                 );
@@ -343,6 +433,19 @@ export default function ClientPesananPage() {
                       const proposalStatusMeta = getProposalStatusMeta(
                         matchedProposal?.status,
                       );
+                      const matchedProject = projectByOrder[String(order.id)];
+                      const canReviewProject =
+                        activeTab === "selesai" && Boolean(matchedProject);
+                      const reviewHref = matchedProject
+                        ? `/dashboard/client/projects/${matchedProject.id}/review?foremanId=${matchedProject.foreman_id}`
+                        : "";
+                      const displayedOrderStatus = isProposalPaidStatus(
+                        matchedProposal?.status,
+                      )
+                        ? "SELESAI"
+                        : matchedProject
+                          ? "SELESAI"
+                          : order.status;
                       const canCheckProposal =
                         order.status === "DISETUJUI" && Boolean(proposalId);
 
@@ -380,9 +483,9 @@ export default function ClientPesananPage() {
 
                           <td className="px-[1rem] py-[0.5rem]">
                             <span
-                              className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] lg:text-[1rem] ${getStatusClassName(order.status)}`}
+                              className={`inline-flex min-w-[4.875rem] justify-center rounded-[0.5rem] px-[0.875rem] py-[0.375rem] text-[0.938rem] font-semibold leading-[1.5rem] lg:text-[1rem] ${getStatusClassName(displayedOrderStatus)}`}
                             >
-                              {getStatusLabel(order.status)}
+                              {getStatusLabel(displayedOrderStatus)}
                             </span>
                           </td>
 
@@ -408,6 +511,15 @@ export default function ClientPesananPage() {
                                   Cek Proposal
                                 </span>
                               )}
+
+                              {canReviewProject ? (
+                                <Link
+                                  href={reviewHref}
+                                  className="inline-flex h-[2.5rem] min-w-[7.5rem] items-center justify-center rounded-[0.5rem] border border-[var(--green-normal)] bg-white px-[0.875rem] text-[0.938rem] font-semibold leading-[1.5rem] text-[var(--green-normal)] transition-colors hover:bg-[var(--green-light)] lg:text-[1rem]"
+                                >
+                                  Beri Review
+                                </Link>
+                              ) : null}
                             </div>
                           </td>
                         </tr>
