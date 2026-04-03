@@ -3,7 +3,6 @@
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import React, { ChangeEvent, FormEvent, useState } from "react";
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import { useAuth } from "@/context/auth-context";
 import {
   AppointmentAuthError,
@@ -368,8 +367,6 @@ export default function TargetTahapanPengerjaanPage() {
           </form>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

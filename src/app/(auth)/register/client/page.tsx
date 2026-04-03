@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { API_BASE_URL } from "@/lib/api-config";
 import { USE_AUTH_CREDENTIALS } from "@/lib/auth-fetch";
@@ -36,33 +36,9 @@ const formFields: Array<{
 export default function RegisterClientPage() {
   const router = useRouter();
   const { setSession } = useAuth();
-  const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  const todayDate = now.toISOString().split("T")[0];
-  const [isFormComplete, setIsFormComplete] = useState(false);
+  const todayDate = new Date().toISOString().split("T")[0];
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
-
-  useEffect(() => {
-    return () => {
-      if (avatarPreviewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(avatarPreviewUrl);
-      }
-    };
-  }, [avatarPreviewUrl]);
-
-  const updateFormValidity = (formElement: HTMLFormElement) => {
-    const formData = new FormData(formElement);
-
-    const allTextFieldsFilled = formFields.every((field) => {
-      const value = formData.get(field.name);
-      return typeof value === "string" && value.trim() !== "";
-    });
-
-    const avatar = formData.get("avatar");
-    const hasAvatar = avatar instanceof File && avatar.size > 0;
-
-    setIsFormComplete(allTextFieldsFilled && hasAvatar);
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -72,18 +48,17 @@ export default function RegisterClientPage() {
       return;
     }
 
-    const nextUrl = URL.createObjectURL(file);
-    setAvatarPreviewUrl((prev) => {
-      if (prev.startsWith("blob:")) {
-        URL.revokeObjectURL(prev);
-      }
-
-      return nextUrl;
-    });
+    setAvatarPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
     const birthDateValue = formData.get("birth_date");
@@ -96,6 +71,7 @@ export default function RegisterClientPage() {
 
     if (password !== confirm) {
       alert("Kata sandi dan konfirmasi kata sandi tidak cocok!");
+      setIsSubmitting(false);
       return;
     }
 
@@ -114,7 +90,15 @@ export default function RegisterClientPage() {
       }
 
       if (!response.ok || data?.success !== true) {
-        alert(data?.message || "Gagal mendaftar, silakan periksa data Anda.");
+        const rawMessage = String(data?.message ?? "").toLowerCase();
+        const message =
+          rawMessage.includes("users_email_key") ||
+          (rawMessage.includes("unique constraint") &&
+            rawMessage.includes("email"))
+            ? "Email sudah terdaftar. Silakan gunakan email lain."
+            : data?.message || "Gagal mendaftar, silakan periksa data Anda.";
+
+        alert(message);
         return;
       }
 
@@ -130,6 +114,8 @@ export default function RegisterClientPage() {
       router.push("/beranda");
     } catch {
       alert("Terjadi kesalahan jaringan.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -157,7 +143,6 @@ export default function RegisterClientPage() {
 
           <form
             onSubmit={handleRegister}
-            onChange={(e) => updateFormValidity(e.currentTarget)}
             className="mx-auto mt-6 flex w-full max-w-[44rem] flex-col gap-3"
           >
             <label
@@ -231,14 +216,10 @@ export default function RegisterClientPage() {
 
             <button
               type="submit"
-              disabled={!isFormComplete}
-              className={`mx-auto mt-3 inline-flex h-[3.25rem] w-full items-center justify-center rounded-lg px-5 text-[1rem] font-semibold transition-colors md:w-[14.75rem] ${
-                isFormComplete
-                  ? "bg-[var(--orange-normal)] text-white hover:bg-[var(--orange-dark)]"
-                  : "border border-[var(--btn-outline-border)] bg-[var(--btn-disabled-bg)] text-[var(--btn-disabled-text)]"
-              }`}
+              disabled={isSubmitting}
+              className="mx-auto mt-3 inline-flex h-[3.25rem] w-full items-center justify-center rounded-lg bg-[var(--orange-normal)] px-5 text-[1rem] font-semibold text-white transition-colors hover:bg-[var(--orange-dark)] md:w-[14.75rem]"
             >
-              Daftar Client
+              {isSubmitting ? "Mendaftar..." : "Daftar Client"}
             </button>
           </form>
         </section>

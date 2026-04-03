@@ -4,7 +4,6 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import BackgroundCircles from "@/components/ui/background-circles";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -279,8 +278,6 @@ export default function ClientProjectReviewPage() {
           </div>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

@@ -62,12 +62,6 @@ export default function PublicNavbar() {
       : userRole === "mandor"
         ? "/dashboard/mandor/profile"
         : "/login";
-  const editProfileHref =
-    userRole === "client"
-      ? "/dashboard/client/profile?mode=edit"
-      : userRole === "mandor"
-        ? "/dashboard/mandor/profile?mode=edit"
-        : "/login";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -149,7 +143,7 @@ export default function PublicNavbar() {
             className="h-9 w-9 object-contain sm:h-10 sm:w-10"
             priority
           />
-          <span className="text-[1.25rem] font-semibold text-[var(--orange-normal)] sm:text-[1.5rem] md:text-[1.75rem]">
+          <span className="text-[1.125rem] font-semibold text-[var(--orange-normal)] sm:text-[1.25rem] md:text-[1.375rem]">
             MandorIn
           </span>
         </Link>
@@ -162,7 +156,7 @@ export default function PublicNavbar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`inline-flex items-center border-b-2 pb-1 text-[1.25rem] leading-8 transition-colors xl:text-[1.5rem] xl:leading-10 ${
+                  className={`inline-flex items-center border-b-2 pb-1 text-[1rem] leading-7 transition-colors xl:text-[1.125rem] xl:leading-8 ${
                     isActive
                       ? "border-[var(--orange-normal)] font-semibold text-[var(--orange-normal)]"
                       : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-black)]"
@@ -181,7 +175,7 @@ export default function PublicNavbar() {
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className="inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-lg border border-[var(--orange-normal)] px-3 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
+                className="inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-lg border border-[var(--orange-normal)] px-3 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6"
                 aria-haspopup="menu"
                 aria-expanded={isProfileMenuOpen}
               >
@@ -214,13 +208,6 @@ export default function PublicNavbar() {
                   >
                     Profile
                   </Link>
-                  <Link
-                    href={editProfileHref}
-                    className="block px-4 py-2.5 text-sm text-[var(--text-black)] transition-colors hover:bg-[var(--white-normal-hover)]"
-                    onClick={() => setIsProfileMenuOpen(false)}
-                  >
-                    Edit Profile
-                  </Link>
                   <button
                     type="button"
                     onClick={handleLogout}
@@ -235,7 +222,7 @@ export default function PublicNavbar() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-3 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6 md:text-base"
+              className="inline-flex h-[2.75rem] items-center justify-center rounded-lg border border-[var(--orange-normal)] px-3 text-sm font-semibold text-[var(--orange-normal)] transition-colors hover:bg-[var(--orange-light)] md:h-[3.25rem] md:px-6"
             >
               Masuk
             </Link>
@@ -278,7 +265,7 @@ export default function PublicNavbar() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex w-full items-center py-2 text-base transition-colors ${
+                    className={`flex w-full items-center py-2 text-[0.938rem] transition-colors ${
                       isActive
                         ? "font-semibold text-[var(--orange-normal)]"
                         : "text-[var(--text-secondary)]"

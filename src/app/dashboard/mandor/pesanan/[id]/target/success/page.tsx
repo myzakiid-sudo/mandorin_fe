@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import BackgroundCircles from "@/components/ui/background-circles";
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 
 export default async function TargetSuccessPage({
   params,
@@ -45,7 +44,6 @@ export default async function TargetSuccessPage({
           </Link>
         </div>
       </main>
-      <PublicFooter />
     </>
   );
 }

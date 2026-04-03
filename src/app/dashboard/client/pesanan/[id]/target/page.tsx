@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import { useAuth } from "@/context/auth-context";
 import {
   payProposal,
@@ -271,7 +270,6 @@ export default function ClientTargetPengerjaanPage() {
             Memuat data proposal...
           </section>
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -294,7 +292,6 @@ export default function ClientTargetPengerjaanPage() {
             </button>
           </section>
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -426,8 +423,6 @@ export default function ClientTargetPengerjaanPage() {
           </div>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

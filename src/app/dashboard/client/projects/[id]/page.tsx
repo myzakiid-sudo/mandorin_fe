@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import { PageStateSection } from "@/components/ui/page-state-section";
 import { useAuth } from "@/context/auth-context";
 import { formatCurrencyIdr, formatDateId } from "@/lib/utils";
@@ -41,7 +41,6 @@ export default function ClientProjectDetailPage() {
         <main className="mx-auto w-full max-w-[90rem] flex-1 px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
           <PageStateSection message="Memuat detail proyek..." />
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -58,7 +57,6 @@ export default function ClientProjectDetailPage() {
             onAction={() => router.push("/dashboard/client/projects")}
           />
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -171,35 +169,69 @@ export default function ClientProjectDetailPage() {
 
           {reports.length ? (
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-              {reports.map((report) => (
-                <article
-                  key={report.id}
-                  className="rounded-[0.75rem] border border-[var(--black-light)] bg-white p-4"
-                >
-                  <h3 className="text-[1rem] font-semibold text-[var(--text-black)]">
-                    {report.title}
-                  </h3>
+              {reports.map((report) => {
+                const reportAuthorName = project.foreman?.name || "Mandor";
 
-                  <p className="mt-1 text-[0.813rem] text-[var(--text-muted)]">
-                    {formatDateId(report.created_at, "long")}
-                  </p>
+                return (
+                  <article
+                    key={report.id}
+                    className="rounded-[1.25rem] border border-[var(--black-light)] bg-[#f7f7f7] p-4 shadow-[0_0.375rem_1rem_rgba(0,0,0,0.04)] md:p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-[1.25rem] font-semibold leading-[1.75rem] text-[var(--text-black)]">
+                          {report.title || reportAuthorName}
+                        </h3>
+                        <p className="mt-0.5 text-[0.875rem] text-[var(--text-muted)]">
+                          {formatDateId(report.created_at, "long")}
+                        </p>
+                      </div>
 
-                  {report.photo ? (
-                    <div
-                      className="mt-3 h-[11rem] rounded-[0.5rem] bg-cover bg-center"
-                      style={{ backgroundImage: `url(${report.photo})` }}
-                    />
-                  ) : (
-                    <div className="mt-3 flex h-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--white-normal-hover)] text-[0.875rem] text-[var(--text-muted)]">
-                      Tidak ada foto progres.
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--text-secondary)]">
+                        <svg
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M14 5l6 6-6 6M20 11H9a5 5 0 0 0-5 5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                        </svg>
+                      </span>
                     </div>
-                  )}
 
-                  <p className="mt-3 text-[0.875rem] text-[var(--text-secondary)]">
-                    {report.content}
-                  </p>
-                </article>
-              ))}
+                    {report.photo ? (
+                      <div className="relative mt-4 aspect-[16/10] overflow-hidden rounded-[1.25rem] bg-[var(--white-normal)]">
+                        <Image
+                          src={report.photo}
+                          alt={`Foto progres ${report.title || reportAuthorName}`}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 40vw"
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-4 flex h-[11rem] items-center justify-center rounded-[1.25rem] bg-[var(--white-normal)] text-[0.875rem] text-[var(--text-muted)]">
+                        Tidak ada foto progres.
+                      </div>
+                    )}
+
+                    <p className="mt-4 text-[1rem] leading-[1.875rem] text-[var(--text-secondary)]">
+                      <span className="font-semibold text-[var(--text-black)]">
+                        {reportAuthorName}
+                      </span>{" "}
+                      {report.content}
+                    </p>
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <div className="mt-5 rounded-[0.75rem] border border-[var(--black-light)] bg-[var(--white-normal-hover)] p-4 text-[0.938rem] text-[var(--text-muted)]">
@@ -208,8 +240,6 @@ export default function ClientProjectDetailPage() {
           )}
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

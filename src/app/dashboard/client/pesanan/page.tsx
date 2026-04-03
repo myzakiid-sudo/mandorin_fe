@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useCallback, useState } from "react";
-
-import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { TableQueryStateRows } from "@/components/ui/table-query-state-rows";
@@ -421,8 +419,6 @@ export default function ClientPesananPage() {
           </div>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

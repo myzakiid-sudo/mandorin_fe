@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import BackgroundCircles from "@/components/ui/background-circles";
 
 export default function ClientProjectReviewSuccessPage() {
@@ -43,8 +42,6 @@ export default function ClientProjectReviewSuccessPage() {
           </div>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import BackgroundCircles from "@/components/ui/background-circles";
 
 export default function ErrorPage({
@@ -50,7 +49,6 @@ export default function ErrorPage({
           </button>
         </div>
       </main>
-      <PublicFooter />
     </>
   );
 }

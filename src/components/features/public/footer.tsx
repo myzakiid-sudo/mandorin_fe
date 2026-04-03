@@ -23,7 +23,7 @@ export default function PublicFooter() {
               />
             </div>
 
-            <p className="mt-4 max-w-[22rem] text-[1rem] leading-[1.75rem] text-[var(--white-normal-hover)] md:text-[1.25rem] md:leading-[2rem] lg:text-[1.625rem] lg:leading-[2.35rem]">
+            <p className="mt-4 max-w-[22rem] text-[0.938rem] leading-[1.6rem] text-[var(--white-normal-hover)] md:text-[1rem] md:leading-[1.75rem] lg:text-[1.125rem] lg:leading-[1.9rem]">
               Membangun masa depan konstruksi yang transparan, aman, dan
               terpercaya melalui teknologi kontrak digital dan laporan progres
               harian.
@@ -31,7 +31,7 @@ export default function PublicFooter() {
           </section>
 
           <section>
-            <h3 className="text-[1.125rem] font-semibold leading-[1.75rem] md:text-[1.375rem] md:leading-[2rem] lg:text-[1.625rem] lg:leading-[2.35rem]">
+            <h3 className="text-[1rem] font-semibold leading-[1.5rem] md:text-[1.125rem] md:leading-[1.75rem] lg:text-[1.25rem] lg:leading-[2rem]">
               Navigasi
             </h3>
             <ul className="mt-5 space-y-3.5">
@@ -39,7 +39,7 @@ export default function PublicFooter() {
                 <li key={item.label}>
                   <Link
                     href={item.href}
-                    className="text-[1rem] leading-[1.75rem] text-[var(--white-normal-hover)] transition-colors hover:text-white md:text-[1.25rem] md:leading-[2rem] lg:text-[1.625rem] lg:leading-[2.35rem]"
+                    className="text-[0.938rem] leading-[1.5rem] text-[var(--white-normal-hover)] transition-colors hover:text-white md:text-[1rem] md:leading-[1.75rem] lg:text-[1.125rem] lg:leading-[2rem]"
                   >
                     {item.label}
                   </Link>
@@ -49,11 +49,11 @@ export default function PublicFooter() {
           </section>
 
           <section>
-            <h3 className="text-[1.125rem] font-semibold leading-[1.75rem] md:text-[1.375rem] md:leading-[2rem] lg:text-[1.625rem] lg:leading-[2.35rem]">
+            <h3 className="text-[1rem] font-semibold leading-[1.5rem] md:text-[1.125rem] md:leading-[1.75rem] lg:text-[1.25rem] lg:leading-[2rem]">
               Hubungi Kami
             </h3>
 
-            <ul className="mt-5 space-y-4 text-[1rem] leading-[1.75rem] text-[var(--white-normal-hover)] md:text-[1.25rem] md:leading-[2rem] lg:text-[1.625rem] lg:leading-[2.35rem]">
+            <ul className="mt-5 space-y-4 text-[0.938rem] leading-[1.5rem] text-[var(--white-normal-hover)] md:text-[1rem] md:leading-[1.75rem] lg:text-[1.125rem] lg:leading-[2rem]">
               <li className="flex items-start gap-2.5">
                 <Image
                   src="/images/icons/icon-lokasi.svg"
@@ -93,7 +93,7 @@ export default function PublicFooter() {
           </section>
         </div>
 
-        <div className="mt-10 border-t border-[var(--white-normal-active)] pt-4 text-center text-[0.875rem] leading-6 text-[var(--white-normal-hover)] md:text-[1rem] md:leading-7 lg:text-[1.125rem]">
+        <div className="mt-10 border-t border-[var(--white-normal-active)] pt-4 text-center text-[0.813rem] leading-6 text-[var(--white-normal-hover)] md:text-[0.875rem] md:leading-7 lg:text-[0.938rem]">
           MandorIn - Solusi Terpercaya Bangun Rumah Impian. 2026
         </div>
       </div>

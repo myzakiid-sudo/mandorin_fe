@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import { PageStateSection } from "@/components/ui/page-state-section";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -35,7 +35,8 @@ export default function MandorProjectDetailPage() {
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportTitle, setReportTitle] = useState("");
   const [reportContent, setReportContent] = useState("");
-  const [reportPhoto, setReportPhoto] = useState("");
+  const [reportPhotoFile, setReportPhotoFile] = useState<File | null>(null);
+  const [reportPhotoFieldKey, setReportPhotoFieldKey] = useState(0);
   const [isAddingReport, setIsAddingReport] = useState(false);
   const [deletingReportId, setDeletingReportId] = useState<number | null>(null);
 
@@ -114,17 +115,24 @@ export default function MandorProjectDetailPage() {
     clearActionState();
     setIsAddingReport(true);
 
+    if (!reportPhotoFile) {
+      setActionError("Foto progres wajib diunggah.");
+      setIsAddingReport(false);
+      return;
+    }
+
     try {
       const created = await addProjectReport(id, {
         title: reportTitle.trim(),
         content: reportContent.trim(),
-        photo: reportPhoto.trim(),
+        photoFile: reportPhotoFile,
       });
 
       setReports((prev) => [created, ...prev]);
       setReportTitle("");
       setReportContent("");
-      setReportPhoto("");
+      setReportPhotoFile(null);
+      setReportPhotoFieldKey((prev) => prev + 1);
       setShowReportForm(false);
       setActionMessage("Progres harian berhasil ditambahkan.");
     } catch (error) {
@@ -186,7 +194,6 @@ export default function MandorProjectDetailPage() {
         <main className="mx-auto w-full max-w-[90rem] flex-1 px-[1rem] py-[1.5rem] md:px-[2.5rem] md:py-[2rem] xl:px-[6.25rem]">
           <PageStateSection message="Memuat detail proyek..." />
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -203,7 +210,6 @@ export default function MandorProjectDetailPage() {
             onAction={() => router.push("/dashboard/mandor/projects")}
           />
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -221,8 +227,7 @@ export default function MandorProjectDetailPage() {
                   {project.title}
                 </h1>
                 <p className="text-[0.938rem] text-[var(--text-secondary)] md:text-[1rem]">
-                  Klien:{" "}
-                  {project.clients?.name || `Klien #${project.client_id}`}
+                  Klien:{" "}`r`n                  {project.clients?.name || `Klien #${project.client_id}`}
                 </p>
               </div>
             </div>
@@ -463,15 +468,23 @@ export default function MandorProjectDetailPage() {
 
               <label className="mt-3 flex flex-col gap-1">
                 <span className="text-[0.875rem] font-semibold text-[var(--text-black)]">
-                  URL Foto
+                  Foto Progres
                 </span>
                 <input
+                  key={reportPhotoFieldKey}
                   required
-                  type="url"
-                  value={reportPhoto}
-                  onChange={(event) => setReportPhoto(event.target.value)}
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => {
+                    setReportPhotoFile(event.target.files?.[0] ?? null);
+                  }}
                   className="h-[2.75rem] rounded-[0.5rem] border border-[var(--black-light)] px-3"
                 />
+                <span className="text-[0.75rem] text-[var(--text-muted)]">
+                  {reportPhotoFile
+                    ? reportPhotoFile.name
+                    : "Belum ada file dipilih"}
+                </span>
               </label>
 
               <div className="mt-3 flex justify-stretch sm:justify-end">
@@ -488,49 +501,82 @@ export default function MandorProjectDetailPage() {
 
           {reports.length ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {reports.map((report) => (
-                <article
-                  key={report.id}
-                  className="rounded-[0.75rem] border border-[var(--black-light)] bg-white p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-[1rem] font-semibold text-[var(--text-black)]">
-                      {report.title}
-                    </h3>
-                    <div className="flex items-center gap-2">
+              {reports.map((report) => {
+                const reportAuthorName = project.foreman?.name || "Mandor";
+
+                return (
+                  <article
+                    key={report.id}
+                    className="rounded-[1.25rem] border border-[var(--black-light)] bg-[#f7f7f7] p-4 shadow-[0_0.375rem_1rem_rgba(0,0,0,0.04)] md:p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-[1.25rem] font-semibold leading-[1.75rem] text-[var(--text-black)]">
+                          {report.title || reportAuthorName}
+                        </h3>
+                        <p className="mt-0.5 text-[0.875rem] text-[var(--text-muted)]">
+                          {formatDateId(report.created_at, "long")}
+                        </p>
+                      </div>
+
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--text-secondary)]">
+                        <svg
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M14 5l6 6-6 6M20 11H9a5 5 0 0 0-5 5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                        </svg>
+                      </span>
+                    </div>
+
+                    {report.photo ? (
+                      <div className="relative mt-4 aspect-[16/10] overflow-hidden rounded-[1.25rem] bg-[var(--white-normal)]">
+                        <Image
+                          src={report.photo}
+                          alt={`Foto progres ${report.title || reportAuthorName}`}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 40vw"
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-4 flex h-[11rem] items-center justify-center rounded-[1.25rem] bg-[var(--white-normal)] text-[0.875rem] text-[var(--text-muted)]">
+                        Tidak ada foto progres.
+                      </div>
+                    )}
+
+                    <p className="mt-4 text-[1rem] leading-[1.875rem] text-[var(--text-secondary)]">
+                      <span className="font-semibold text-[var(--text-black)]">
+                        {reportAuthorName}
+                      </span>{" "}
+                      {report.content}
+                    </p>
+
+                    <div className="mt-4 flex justify-end">
                       <button
                         type="button"
                         onClick={() => handleDeleteReport(report.id)}
                         disabled={deletingReportId === report.id}
-                        className="inline-flex h-[2rem] items-center justify-center rounded-[0.375rem] border border-[var(--red-normal)] px-3 text-[0.75rem] font-semibold text-[var(--red-normal)] disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-text)] disabled:text-[var(--btn-disabled-text)]"
+                        className="inline-flex h-[2.125rem] items-center justify-center rounded-[0.5rem] border border-[var(--red-normal)] px-3 text-[0.75rem] font-semibold text-[var(--red-normal)] transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:border-[var(--btn-disabled-text)] disabled:text-[var(--btn-disabled-text)]"
                       >
                         {deletingReportId === report.id
                           ? "Menghapus..."
                           : "Hapus"}
                       </button>
                     </div>
-                  </div>
-
-                  <p className="mt-1 text-[0.813rem] text-[var(--text-muted)]">
-                    {formatDateId(report.created_at, "long")}
-                  </p>
-
-                  {report.photo ? (
-                    <div
-                      className="mt-3 h-[11rem] rounded-[0.5rem] bg-cover bg-center"
-                      style={{ backgroundImage: `url(${report.photo})` }}
-                    />
-                  ) : (
-                    <div className="mt-3 flex h-[11rem] items-center justify-center rounded-[0.5rem] bg-[var(--white-normal-hover)] text-[0.875rem] text-[var(--text-muted)]">
-                      Tidak ada foto progres.
-                    </div>
-                  )}
-
-                  <p className="mt-3 text-[0.875rem] text-[var(--text-secondary)]">
-                    {report.content}
-                  </p>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <div className="rounded-[0.75rem] border border-[var(--black-light)] bg-[var(--white-normal-hover)] p-4 text-[0.938rem] text-[var(--text-muted)]">
@@ -539,8 +585,8 @@ export default function MandorProjectDetailPage() {
           )}
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }
+
+

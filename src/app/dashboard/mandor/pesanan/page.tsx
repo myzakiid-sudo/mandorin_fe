@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useCallback, useState } from "react";
-
-import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 import { AppButton } from "@/components/ui/app-button";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
@@ -456,8 +454,6 @@ export default function MandorPesananPage() {
           </div>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

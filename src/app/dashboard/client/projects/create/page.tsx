@@ -4,7 +4,6 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import PublicNavbar from "@/components/features/public/navbar";
-import PublicFooter from "@/components/features/public/footer";
 import { useAuth } from "@/context/auth-context";
 import { createProject, ProjectAuthError } from "@/lib/project-api";
 
@@ -175,8 +174,6 @@ export default function CreateProjectPage() {
           </form>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

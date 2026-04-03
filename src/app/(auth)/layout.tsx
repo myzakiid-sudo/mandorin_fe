@@ -3,6 +3,5 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // TODO: add orange background
   return <>{children}</>;
 }

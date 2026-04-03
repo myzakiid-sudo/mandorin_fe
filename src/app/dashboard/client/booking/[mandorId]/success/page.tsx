@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 
 export default function BookingSuccessPage() {
@@ -45,8 +44,6 @@ export default function BookingSuccessPage() {
           </Link>
         </section>
       </main>
-
-      <PublicFooter />
     </>
   );
 }

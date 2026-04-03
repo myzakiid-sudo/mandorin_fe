@@ -2,8 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-
-import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 import { useAuth } from "@/context/auth-context";
 import { addProjectReport, ProjectAuthError } from "@/lib/project-api";
@@ -16,7 +14,8 @@ export default function CreateProgressPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [photo, setPhoto] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoFieldKey, setPhotoFieldKey] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,13 +29,21 @@ export default function CreateProgressPage() {
     setErrorMessage("");
     setIsSubmitting(true);
 
+    if (!photoFile) {
+      setErrorMessage("Foto progres wajib diunggah.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await addProjectReport(id, {
         title: title.trim(),
         content: content.trim(),
-        photo: photo.trim(),
+        photoFile,
       });
 
+      setPhotoFile(null);
+      setPhotoFieldKey((prev) => prev + 1);
       router.push(`/dashboard/mandor/projects/${id}`);
     } catch (error) {
       if (error instanceof ProjectAuthError) {
@@ -93,15 +100,21 @@ export default function CreateProgressPage() {
 
             <label className="flex flex-col gap-1">
               <span className="text-[0.875rem] font-semibold text-[var(--text-black)]">
-                URL Foto
+                Foto Progres
               </span>
               <input
+                key={photoFieldKey}
                 required
-                type="url"
-                value={photo}
-                onChange={(event) => setPhoto(event.target.value)}
+                type="file"
+                accept="image/*"
+                onChange={(event) =>
+                  setPhotoFile(event.target.files?.[0] ?? null)
+                }
                 className="h-[2.75rem] rounded-[0.5rem] border border-[var(--black-light)] px-3"
               />
+              <span className="text-[0.75rem] text-[var(--text-muted)]">
+                {photoFile ? photoFile.name : "Belum ada file dipilih"}
+              </span>
             </label>
 
             {errorMessage ? (
@@ -130,8 +143,6 @@ export default function CreateProgressPage() {
           </form>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

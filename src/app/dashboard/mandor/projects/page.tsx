@@ -3,8 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
-
-import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 import { TableQueryStateRows } from "@/components/ui/table-query-state-rows";
 import { useAuth } from "@/context/auth-context";
@@ -247,8 +245,6 @@ export default function MandorProjectsPage() {
           </div>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

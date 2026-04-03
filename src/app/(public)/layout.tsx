@@ -10,15 +10,16 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isPortfolioDetailPage = /^\/mandor\/[^/]+\/portfolio\/[^/]+$/.test(
-    pathname,
-  );
+  const shouldShowFooter =
+    pathname === "/beranda" ||
+    pathname === "/mandor" ||
+    /^\/mandor\/[^/]+$/.test(pathname);
 
   return (
     <>
       <PublicNavbar />
       {children}
-      {isPortfolioDetailPage ? null : <PublicFooter />}
+      {shouldShowFooter ? <PublicFooter /> : null}
     </>
   );
 }

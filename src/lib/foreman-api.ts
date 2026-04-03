@@ -34,7 +34,7 @@ export async function getForemanList(name?: string): Promise<ForemanProfile[]> {
     headers: {
       Accept: "application/json",
     },
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
 
   if (
@@ -58,7 +58,7 @@ export async function getForemanById(
     headers: {
       Accept: "application/json",
     },
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
 
   if (!response.ok || payload?.success !== true || !payload.data) {
@@ -81,6 +81,8 @@ export type ForemanProfileShape = {
   bio?: unknown;
   strength?: unknown;
   experience?: unknown;
+  avatar?: unknown;
+  portfolio?: unknown;
   foreman?: unknown;
 };
 
@@ -99,6 +101,8 @@ export type MandorProfileForm = {
   experience: string;
   bio: string;
   strength: string;
+  avatar: string;
+  portfolio: string;
 };
 
 export const emptyMandorProfileForm: MandorProfileForm = {
@@ -114,6 +118,8 @@ export const emptyMandorProfileForm: MandorProfileForm = {
   experience: "",
   bio: "",
   strength: "",
+  avatar: "",
+  portfolio: "",
 };
 
 const asRecord = (value: unknown): Record<string, unknown> | null => {
@@ -181,7 +187,65 @@ export const mapApiToMandorForm = (
     bio: readString(root, "bio") || readString(nestedForeman, "bio"),
     strength:
       readString(root, "strength") || readString(nestedForeman, "strength"),
+    avatar: readString(root, "avatar") || readString(nestedForeman, "avatar"),
+    portfolio:
+      readString(root, "portfolio") || readString(nestedForeman, "portfolio"),
   };
+};
+
+const resolveRemoteFileExtension = (contentType: string) => {
+  if (contentType.includes("png")) return "png";
+  if (contentType.includes("webp")) return "webp";
+  if (contentType.includes("gif")) return "gif";
+  if (contentType.includes("svg")) return "svg";
+  return "jpg";
+};
+
+const downloadFileFromUrl = async (
+  url: string,
+  fallbackName: string,
+): Promise<File | null> => {
+  if (!url.trim()) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
+    }
+
+    const blob = await response.blob();
+    const extension = resolveRemoteFileExtension(blob.type || "");
+    const filename = `${fallbackName}.${extension}`;
+    return new File([blob], filename, {
+      type: blob.type || "application/octet-stream",
+    });
+  } catch {
+    return null;
+  }
+};
+
+const appendMediaField = async (
+  formData: FormData,
+  key: "avatar" | "portfolio",
+  selectedFile: File | null | undefined,
+  fallbackUrl: string,
+) => {
+  if (selectedFile) {
+    formData.append(key, selectedFile);
+    return;
+  }
+
+  const existingFile = await downloadFileFromUrl(fallbackUrl, key);
+  if (existingFile) {
+    formData.append(key, existingFile);
+    return;
+  }
+
+  if (fallbackUrl.trim()) {
+    formData.append(key, fallbackUrl.trim());
+  }
 };
 
 export async function getForemanProfileByUserId(
@@ -208,32 +272,42 @@ export async function getForemanProfileByUserId(
 
 export async function updateForemanProfile(
   form: MandorProfileForm,
+  media?: {
+    avatarFile?: File | null;
+    portfolioFile?: File | null;
+  },
 ): Promise<MandorProfileForm> {
+  const body = new FormData();
+  body.append("name", form.name);
+  body.append("nik", form.nik);
+  body.append("birth_place", form.birth_place);
+  body.append("birth_date", form.birth_date);
+  body.append("sex", form.sex);
+  body.append("address", form.address);
+  body.append("email", form.email);
+  body.append("phone", form.phone || "null");
+  body.append("field", form.field);
+  body.append("experience", form.experience || "0");
+  body.append("bio", form.bio);
+  body.append("strength", form.strength);
+
+  await appendMediaField(body, "avatar", media?.avatarFile, form.avatar);
+  await appendMediaField(
+    body,
+    "portfolio",
+    media?.portfolioFile,
+    form.portfolio,
+  );
+
   const { response, payload } = await requestJson<ForemanApiResponse>(
     `${API_BASE_URL}/foreman`,
     {
       auth: true,
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({
-        name: form.name,
-        birth_place: form.birth_place,
-        birth_date: form.birth_date
-          ? `${form.birth_date}T00:00:00.000Z`
-          : undefined,
-        sex: form.sex,
-        address: form.address,
-        email: form.email,
-        phone: form.phone,
-        nik: form.nik,
-        field: form.field,
-        bio: form.bio,
-        strength: form.strength,
-        experience: Number(form.experience) || 0,
-      }),
+      body,
     },
   );
 

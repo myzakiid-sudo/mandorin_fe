@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-import PublicFooter from "@/components/features/public/footer";
 import PublicNavbar from "@/components/features/public/navbar";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -235,7 +233,6 @@ export default function MandorPesananDetailPage() {
             Memuat detail pesanan...
           </div>
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -249,7 +246,6 @@ export default function MandorPesananDetailPage() {
             {errorMessage || "Data pesanan tidak ditemukan."}
           </div>
         </main>
-        <PublicFooter />
       </div>
     );
   }
@@ -408,8 +404,6 @@ export default function MandorPesananDetailPage() {
           </form>
         </section>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

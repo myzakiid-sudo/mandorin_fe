@@ -1,6 +1,7 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
 import { AppButton } from "@/components/ui/app-button";
 import { FormField } from "@/components/ui/form-field";
@@ -15,6 +16,10 @@ import {
 export default function MandorProfilePage() {
   const { authSession, isReady } = useAuth();
   const [form, setForm] = useState<MandorProfileForm>(emptyMandorProfileForm);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+  const [portfolioPreviewUrl, setPortfolioPreviewUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -49,6 +54,10 @@ export default function MandorProfilePage() {
 
         if (!controller.signal.aborted) {
           setForm(nextForm);
+          setAvatarFile(null);
+          setPortfolioFile(null);
+          setAvatarPreviewUrl("");
+          setPortfolioPreviewUrl("");
         }
       } catch (error) {
         if (controller.signal.aborted) {
@@ -79,6 +88,47 @@ export default function MandorProfilePage() {
     }));
   };
 
+  const updatePreview = (
+    setPreview: (value: string) => void,
+    currentPreview: string,
+    file: File | null,
+  ) => {
+    if (currentPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(currentPreview);
+    }
+
+    if (!file) {
+      setPreview("");
+      return;
+    }
+
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setAvatarFile(file);
+    updatePreview(setAvatarPreviewUrl, avatarPreviewUrl, file);
+  };
+
+  const handlePortfolioChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setPortfolioFile(file);
+    updatePreview(setPortfolioPreviewUrl, portfolioPreviewUrl, file);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+
+      if (portfolioPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(portfolioPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl, portfolioPreviewUrl]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -86,8 +136,15 @@ export default function MandorProfilePage() {
     setSuccessMessage("");
 
     try {
-      const updatedForm = await updateForemanProfile(form);
+      const updatedForm = await updateForemanProfile(form, {
+        avatarFile,
+        portfolioFile,
+      });
       setForm(updatedForm);
+      setAvatarFile(null);
+      setPortfolioFile(null);
+      setAvatarPreviewUrl("");
+      setPortfolioPreviewUrl("");
       setSuccessMessage("Profil mandor berhasil diperbarui.");
     } catch (error) {
       setErrorMessage(
@@ -133,6 +190,9 @@ export default function MandorProfilePage() {
       </div>
     );
   }
+
+  const avatarDisplayUrl = avatarPreviewUrl || form.avatar;
+  const portfolioDisplayUrl = portfolioPreviewUrl || form.portfolio;
 
   return (
     <main className="min-h-screen bg-[var(--white-normal-hover)] px-4 py-6 md:px-8 md:py-10 xl:px-16">
@@ -204,6 +264,67 @@ export default function MandorProfilePage() {
             value={form.nik}
             onChange={(v) => setField("nik", v)}
           />
+
+          <label className="md:col-span-2">
+            <span className="text-sm font-medium text-[var(--text-black)]">
+              Avatar (opsional)
+            </span>
+
+            <div className="mt-1 flex flex-col gap-3 rounded-lg border border-[var(--black-light)] bg-[var(--white-normal-hover)] p-3 md:flex-row md:items-center">
+              <div className="relative h-20 w-20 overflow-hidden rounded-full border border-[var(--black-light)] bg-white">
+                {avatarDisplayUrl ? (
+                  <Image
+                    src={avatarDisplayUrl}
+                    alt="Preview avatar"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-[var(--text-muted)]">
+                    Belum ada
+                  </div>
+                )}
+              </div>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="w-full text-sm text-[var(--text-black)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--orange-normal)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[var(--orange-dark)]"
+              />
+            </div>
+          </label>
+
+          <label className="md:col-span-2">
+            <span className="text-sm font-medium text-[var(--text-black)]">
+              Portofolio (opsional)
+            </span>
+
+            <div className="mt-1 rounded-lg border border-[var(--black-light)] bg-[var(--white-normal-hover)] p-3">
+              <div className="relative h-36 w-full overflow-hidden rounded-lg border border-[var(--black-light)] bg-white">
+                {portfolioDisplayUrl ? (
+                  <Image
+                    src={portfolioDisplayUrl}
+                    alt="Preview portofolio"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-[var(--text-muted)]">
+                    Belum ada
+                  </div>
+                )}
+              </div>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePortfolioChange}
+                className="mt-3 w-full text-sm text-[var(--text-black)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--orange-normal)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[var(--orange-dark)]"
+              />
+            </div>
+          </label>
+
           <FormField
             label="Pengalaman (tahun)"
             value={form.experience}
