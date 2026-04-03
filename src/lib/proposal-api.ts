@@ -385,6 +385,12 @@ export async function payProposal(id: string): Promise<ProposalPayResult> {
     );
   }
 
+  if (!paymentUrl) {
+    throw new Error(
+      "Sesi pembayaran berhasil dibuat, tetapi URL pembayaran tidak tersedia. Silakan coba lagi atau hubungi admin.",
+    );
+  }
+
   const status = resolvedPaymentData?.status ?? null;
 
   return {

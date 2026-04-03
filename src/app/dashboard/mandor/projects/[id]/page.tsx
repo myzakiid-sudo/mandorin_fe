@@ -361,7 +361,7 @@ export default function MandorProjectDetailPage() {
           <div className="rounded-[1rem] border border-[var(--black-light)] bg-[var(--white-normal-hover)] p-4 md:p-6">
             {milestones.length ? (
               <ol className="relative border-s-2 border-[var(--black-light)] ps-6">
-                {milestones.map((step) => (
+                {milestones.map((step, index) => (
                   <li key={step.id} className="mb-6 last:mb-0">
                     <span
                       className={`absolute -start-[0.72rem] mt-1 inline-flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-full border-2 border-white ${
@@ -374,7 +374,7 @@ export default function MandorProjectDetailPage() {
                     <div className="rounded-[0.75rem] border border-[var(--black-light)] bg-white p-4 shadow-sm">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-left text-[1rem] font-semibold text-[var(--text-black)] md:text-[1.125rem]">
-                          Tahapan {step.id}: {step.title}
+                          Tahapan {index + 1}: {step.title}
                         </p>
                         <span
                           className={`inline-flex rounded-full px-3 py-1 text-[0.75rem] font-semibold text-white ${
@@ -588,5 +588,3 @@ export default function MandorProjectDetailPage() {
     </div>
   );
 }
-
-

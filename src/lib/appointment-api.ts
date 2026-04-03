@@ -56,6 +56,75 @@ const isAccessTokenInvalidMessage = (message?: string) =>
 const isAuthFailure = (status: number, message?: string) =>
   status === 401 || isAccessTokenInvalidMessage(message);
 
+const toPositiveNumber = (value: unknown): number | null => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  return null;
+};
+
+const readByPath = (source: Record<string, unknown>, path: string): unknown => {
+  return path.split(".").reduce<unknown>((acc, key) => {
+    if (!acc || typeof acc !== "object") {
+      return undefined;
+    }
+
+    return (acc as Record<string, unknown>)[key];
+  }, source);
+};
+
+const readPositiveFromPaths = (
+  source: Record<string, unknown>,
+  paths: string[],
+): number | null => {
+  for (const path of paths) {
+    const resolved = toPositiveNumber(readByPath(source, path));
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return null;
+};
+
+const normalizeAppointment = (appointment: Appointment): Appointment => {
+  const record = appointment as unknown as Record<string, unknown>;
+
+  const clientId =
+    readPositiveFromPaths(record, [
+      "client_id",
+      "clientId",
+      "client_user_id",
+      "client.id",
+      "client.user_id",
+      "clients.id",
+      "clients.user_id",
+    ]) ?? 0;
+  const foremanId =
+    readPositiveFromPaths(record, [
+      "foreman_id",
+      "foremanId",
+      "foreman_user_id",
+      "foreman.id",
+      "foreman.user_id",
+      "foremen.id",
+      "foremen.user_id",
+    ]) ?? 0;
+
+  return {
+    ...appointment,
+    client_id: clientId,
+    foreman_id: foremanId,
+    status: normalizeAppointmentStatus(appointment.status),
+  };
+};
+
 export async function getAppointments(): Promise<Appointment[]> {
   const { response, payload } = await requestJson<ApiListResponse>(
     `${API_BASE_URL}/appointments`,
@@ -69,7 +138,7 @@ export async function getAppointments(): Promise<Appointment[]> {
   );
 
   if (Array.isArray(payload?.data)) {
-    return payload.data;
+    return payload.data.map((item) => normalizeAppointment(item));
   }
 
   if (isNoAppointmentMessage(payload?.message)) {
@@ -107,7 +176,7 @@ export async function getAppointmentById(id: string): Promise<Appointment> {
     throw new Error(payload?.message || "Data janji temu tidak ditemukan.");
   }
 
-  return payload.data;
+  return normalizeAppointment(payload.data);
 }
 
 export async function createAppointment(input: {
@@ -144,7 +213,7 @@ export async function createAppointment(input: {
     throw new Error(payload?.message || "Gagal membuat janji temu.");
   }
 
-  return payload.data;
+  return normalizeAppointment(payload.data);
 }
 
 export async function updateAppointmentStatus(
@@ -172,5 +241,5 @@ export async function updateAppointmentStatus(
     throw new Error(payload?.message || "Gagal memperbarui janji temu.");
   }
 
-  return payload.data;
+  return normalizeAppointment(payload.data);
 }

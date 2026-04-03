@@ -10,6 +10,57 @@ import {
 } from "@/lib/appointment-api";
 import { createProposal, ProposalAuthError } from "@/lib/proposal-api";
 
+const toPositiveNumber = (value: unknown): number | null => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  return null;
+};
+
+const readByPath = (source: Record<string, unknown>, path: string): unknown => {
+  return path.split(".").reduce<unknown>((acc, key) => {
+    if (!acc || typeof acc !== "object") {
+      return undefined;
+    }
+
+    return (acc as Record<string, unknown>)[key];
+  }, source);
+};
+
+const readPositiveIdFromQuery = (
+  params: ReturnType<typeof useSearchParams>,
+  keys: string[],
+) => {
+  for (const key of keys) {
+    const resolved = toPositiveNumber(params.get(key));
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return null;
+};
+
+const readPositiveIdFromAppointment = (
+  appointment: Record<string, unknown>,
+  keys: string[],
+) => {
+  for (const key of keys) {
+    const resolved = toPositiveNumber(readByPath(appointment, key));
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return null;
+};
+
 function InputTarget({
   label,
   name,
@@ -113,27 +164,49 @@ export default function TargetTahapanPengerjaanPage() {
     setErrorMessage("");
 
     try {
-      let clientId = Number(searchParams.get("clientId") ?? "");
-      let foremanId = Number(searchParams.get("foremanId") ?? "");
+      let clientId = readPositiveIdFromQuery(searchParams, [
+        "clientId",
+        "client_id",
+      ]);
+      let foremanId = readPositiveIdFromQuery(searchParams, [
+        "foremanId",
+        "foreman_id",
+      ]);
 
-      const hasValidIds =
-        Number.isFinite(clientId) &&
-        clientId > 0 &&
-        Number.isFinite(foremanId) &&
-        foremanId > 0;
+      const hasValidIds = Boolean(clientId && foremanId);
 
       if (!hasValidIds) {
-        const appointment = await getAppointmentById(orderId);
-        clientId = Number(appointment.client_id);
-        foremanId = Number(appointment.foreman_id);
+        const appointment = (await getAppointmentById(orderId)) as Record<
+          string,
+          unknown
+        >;
+
+        clientId = readPositiveIdFromAppointment(appointment, [
+          "client_id",
+          "clientId",
+          "client_user_id",
+          "client.id",
+          "client.user_id",
+          "clients.id",
+          "clients.user_id",
+        ]);
+        foremanId = readPositiveIdFromAppointment(appointment, [
+          "foreman_id",
+          "foremanId",
+          "foreman_user_id",
+          "foreman.id",
+          "foreman.user_id",
+          "foremen.id",
+          "foremen.user_id",
+        ]);
       }
 
-      if (!Number.isFinite(clientId) || clientId <= 0) {
-        throw new Error("ID Klien wajib diisi");
+      if (!clientId) {
+        throw new Error("Data pesanan tidak memuat ID klien yang valid.");
       }
 
-      if (!Number.isFinite(foremanId) || foremanId <= 0) {
-        throw new Error("ID Mandor wajib diisi");
+      if (!foremanId) {
+        throw new Error("Data pesanan tidak memuat ID mandor yang valid.");
       }
 
       const payload = new FormData();
@@ -148,6 +221,8 @@ export default function TargetTahapanPengerjaanPage() {
       payload.set("foreman_id", String(foremanId));
       payload.set("clientId", String(clientId));
       payload.set("foremanId", String(foremanId));
+      payload.set("client", String(clientId));
+      payload.set("foreman", String(foremanId));
 
       await createProposal(payload);
 

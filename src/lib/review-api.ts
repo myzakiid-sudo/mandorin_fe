@@ -29,6 +29,11 @@ type CreateReviewInput = {
   score: number;
 };
 
+type CreateReviewPayload = CreateReviewInput & {
+  clientId?: number;
+  foremanId?: number;
+};
+
 export class ReviewAuthError extends Error {
   constructor(message = "Sesi login berakhir. Silakan login ulang.") {
     super(message);
@@ -43,6 +48,28 @@ const isAccessTokenInvalidMessage = (message?: string) =>
 
 const isAuthFailure = (status: number, message?: string) =>
   status === 401 || isAccessTokenInvalidMessage(message);
+
+const isMissingMandorOrClientIdMessage = (message?: string) =>
+  Boolean(
+    message && /(id\s*mandor|id\s*klien).*(wajib\s*diisi)/i.test(message),
+  );
+
+const postCreateReview = async (payloadBody: CreateReviewPayload) => {
+  const { response, payload } = await requestJson<ReviewDetailResponse>(
+    `${API_BASE_URL}/reviews`,
+    {
+      auth: true,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payloadBody),
+    },
+  );
+
+  return { response, payload };
+};
 
 export async function getReviews(userId?: string): Promise<Review[]> {
   const query = userId?.trim() ? `?userId=${encodeURIComponent(userId)}` : "";
@@ -73,29 +100,76 @@ export async function getReviews(userId?: string): Promise<Review[]> {
   return [];
 }
 
-export async function createReview(input: CreateReviewInput): Promise<Review> {
-  const { response, payload } = await requestJson<ReviewDetailResponse>(
-    `${API_BASE_URL}/reviews`,
+export async function getPublicReviews(userId?: string): Promise<Review[]> {
+  const query = userId?.trim() ? `?userId=${encodeURIComponent(userId)}` : "";
+
+  const { response, payload } = await requestJson<ReviewListResponse>(
+    `${API_BASE_URL}/reviews${query}`,
     {
-      auth: true,
-      method: "POST",
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify(input),
+      cache: "no-store",
     },
   );
 
-  if (isAuthFailure(response.status, payload?.message)) {
-    throw new ReviewAuthError(payload?.message);
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
   }
 
-  if (!response.ok || payload?.success !== true || !payload.data) {
-    throw new Error(payload?.message || "Gagal membuat review.");
+  if (!response.ok || payload?.success !== true) {
+    return [];
   }
 
-  return payload.data;
+  return [];
+}
+
+export async function createReview(input: CreateReviewInput): Promise<Review> {
+  const firstAttempt = await postCreateReview(input);
+
+  if (
+    isAuthFailure(firstAttempt.response.status, firstAttempt.payload?.message)
+  ) {
+    throw new ReviewAuthError(firstAttempt.payload?.message);
+  }
+
+  if (
+    firstAttempt.response.ok &&
+    firstAttempt.payload?.success === true &&
+    firstAttempt.payload.data
+  ) {
+    return firstAttempt.payload.data;
+  }
+
+  if (isMissingMandorOrClientIdMessage(firstAttempt.payload?.message)) {
+    const secondAttempt = await postCreateReview({
+      ...input,
+      clientId: input.client_id,
+      foremanId: input.foreman_id,
+    });
+
+    if (
+      isAuthFailure(
+        secondAttempt.response.status,
+        secondAttempt.payload?.message,
+      )
+    ) {
+      throw new ReviewAuthError(secondAttempt.payload?.message);
+    }
+
+    if (
+      secondAttempt.response.ok &&
+      secondAttempt.payload?.success === true &&
+      secondAttempt.payload.data
+    ) {
+      return secondAttempt.payload.data;
+    }
+
+    throw new Error(secondAttempt.payload?.message || "Gagal membuat review.");
+  }
+
+  throw new Error(firstAttempt.payload?.message || "Gagal membuat review.");
 }
 
 export async function deleteReview(id: string): Promise<Review> {

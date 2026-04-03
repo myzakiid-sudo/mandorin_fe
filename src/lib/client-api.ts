@@ -31,3 +31,26 @@ export async function getClientDisplayByUserId(userId: string) {
 
   return payload.data;
 }
+
+export async function getPublicClientDisplayByUserId(userId: string) {
+  if (!userId.trim()) {
+    return null;
+  }
+
+  const { response, payload } = await requestJson<ClientProfileResponse>(
+    `${API_BASE_URL}/clients/${encodeURIComponent(userId)}`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok || payload?.success !== true || !payload.data) {
+    return null;
+  }
+
+  return payload.data;
+}

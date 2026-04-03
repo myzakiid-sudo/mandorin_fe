@@ -15,12 +15,66 @@ import {
 } from "@/lib/review-api";
 import { getProjectById, ProjectAuthError } from "@/lib/project-api";
 
+const toPositiveNumber = (value: unknown): number | null => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  return null;
+};
+
+const readByPath = (source: Record<string, unknown>, path: string): unknown => {
+  return path.split(".").reduce<unknown>((acc, key) => {
+    if (!acc || typeof acc !== "object") {
+      return undefined;
+    }
+
+    return (acc as Record<string, unknown>)[key];
+  }, source);
+};
+
+const readPositiveIdFromQuery = (
+  params: ReturnType<typeof useSearchParams>,
+  keys: string[],
+) => {
+  for (const key of keys) {
+    const resolved = toPositiveNumber(params.get(key));
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return null;
+};
+
+const readPositiveIdFromRecord = (
+  record: Record<string, unknown>,
+  paths: string[],
+) => {
+  for (const path of paths) {
+    const resolved = toPositiveNumber(readByPath(record, path));
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return null;
+};
+
 export default function ClientProjectReviewPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const { authSession, clearSession } = useAuth();
-  const foremanIdFromQuery = searchParams.get("foremanId")?.trim() ?? "";
+  const foremanIdFromQuery = useMemo(
+    () => readPositiveIdFromQuery(searchParams, ["foremanId", "foreman_id"]),
+    [searchParams],
+  );
   const [fallbackForemanId, setFallbackForemanId] = useState<number | null>(
     null,
   );
@@ -72,8 +126,7 @@ export default function ClientProjectReviewPage() {
   useEffect(() => {
     let cancelled = false;
 
-    const parsedForemanId = Number(foremanIdFromQuery);
-    if (Number.isFinite(parsedForemanId) && parsedForemanId > 0) {
+    if (foremanIdFromQuery) {
       setFallbackForemanId(null);
       return;
     }
@@ -85,24 +138,30 @@ export default function ClientProjectReviewPage() {
 
     const loadForemanFromProject = async () => {
       try {
-        const project = await getProjectById(projectId);
+        const project = (await getProjectById(projectId)) as Record<
+          string,
+          unknown
+        >;
 
         if (cancelled) {
           return;
         }
 
-        const candidateForemanIds = [
-          Number(project.foreman_id),
-          Number(project.foreman?.user_id ?? ""),
-          Number(project.foreman?.id ?? ""),
-        ];
+        const resolvedForemanId = readPositiveIdFromRecord(project, [
+          "foreman_id",
+          "foremanId",
+          "foreman_user_id",
+          "foreman.id",
+          "foreman.user_id",
+          "foreman.users.id",
+          "foreman.users.user_id",
+          "foremen.id",
+          "foremen.user_id",
+          "foremen.users.id",
+          "foremen.users.user_id",
+        ]);
 
-        const resolved =
-          candidateForemanIds.find(
-            (value) => Number.isFinite(value) && value > 0,
-          ) ?? null;
-
-        setFallbackForemanId(resolved);
+        setFallbackForemanId(resolvedForemanId);
       } catch (error) {
         if (cancelled) {
           return;
@@ -126,9 +185,8 @@ export default function ClientProjectReviewPage() {
   }, [clearSession, foremanIdFromQuery, params?.id, router]);
 
   const resolvedForemanId = useMemo(() => {
-    const parsedForemanId = Number(foremanIdFromQuery);
-    if (Number.isFinite(parsedForemanId) && parsedForemanId > 0) {
-      return parsedForemanId;
+    if (foremanIdFromQuery) {
+      return foremanIdFromQuery;
     }
 
     return fallbackForemanId;

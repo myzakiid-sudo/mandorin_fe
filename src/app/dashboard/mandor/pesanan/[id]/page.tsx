@@ -282,17 +282,6 @@ export default function MandorPesananDetailPage() {
               label="Nama Client"
               value={clientName || `Client #${appointment.client_id}`}
             />
-            <ReadonlyInput
-              label="Client ID"
-              value={String(appointment.client_id)}
-            />
-
-            <div className="md:col-span-2">
-              <ReadonlyInput
-                label="Foreman ID"
-                value={String(appointment.foreman_id)}
-              />
-            </div>
 
             <div className="md:col-span-2">
               <ReadonlyInput label="Catatan" value={appointment.note || "-"} />
