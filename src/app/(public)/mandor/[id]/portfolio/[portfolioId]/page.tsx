@@ -1,41 +1,32 @@
 import Link from "next/link";
 
-import { contractorById } from "@/components/features/mandor/data";
 import { getForemanById } from "@/lib/foreman-api";
 
-export default async function ContractorPortfolioDetailPage({
+export default async function MandorPortfolioDetailPage({
   params,
 }: {
   params: Promise<{ id: string; portfolioId: string }>;
 }) {
   const { id, portfolioId } = await params;
-  const localContractor = contractorById[id];
-  const localPortfolioItem = localContractor?.portfolio.find(
-    (item) => item.id === portfolioId,
-  );
+  const foreman = await getForemanById(id);
 
-  let portfolioItem = localPortfolioItem;
-
-  if (!portfolioItem && portfolioId === "api-portfolio") {
-    const foreman = await getForemanById(id);
-
-    if (foreman?.portfolio) {
-      portfolioItem = {
-        id: "api-portfolio",
-        title: foreman.field || "Portofolio Proyek",
-        description: `Portofolio ${foreman.name}`,
-        year: String(new Date().getFullYear()),
-        image: foreman.portfolio,
-        location: foreman.address || "Lokasi proyek belum tersedia",
-        status: "Selesai",
-        duration: "-",
-        area: "-",
-        details:
-          foreman.bio?.trim() ||
-          "Detail portofolio belum tersedia dari backend.",
-      };
-    }
-  }
+  const portfolioItem =
+    foreman?.portfolio && portfolioId === "api-portfolio"
+      ? {
+          id: "api-portfolio",
+          title: foreman.field || "Portofolio Proyek",
+          description: `Portofolio ${foreman.name}`,
+          year: String(new Date().getFullYear()),
+          image: foreman.portfolio,
+          location: foreman.address || "Lokasi proyek belum tersedia",
+          status: "Selesai",
+          duration: "-",
+          area: "-",
+          details:
+            foreman.bio?.trim() ||
+            "Detail portofolio belum tersedia dari backend.",
+        }
+      : null;
 
   if (!portfolioItem) {
     return (
@@ -51,7 +42,7 @@ export default async function ContractorPortfolioDetailPage({
             href={`/mandor/${id}`}
             className="mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-[var(--orange-normal)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--orange-dark)]"
           >
-            Kembali ke Detail Contractor
+            Kembali ke Detail Mandor
           </Link>
         </div>
       </main>
@@ -70,28 +61,19 @@ export default async function ContractorPortfolioDetailPage({
           href={`/mandor/${id}`}
           className="inline-flex items-center text-sm font-semibold text-white/90 hover:text-white"
         >
-          ← Kembali ke Detail Contractor
+          ← Kembali ke Detail Mandor
         </Link>
 
         <div className="mt-10 max-w-[68rem] space-y-10 md:mt-12 md:space-y-12">
           <h1 className="text-[2rem] font-semibold leading-tight md:text-[2.5rem]">
-            {portfolioItem.id === "porto-1"
-              ? "Renovasi & Perluasan Kabin Kayu Minimalis"
-              : portfolioItem.id === "porto-2"
-                ? "Pembangunan Hunian Klasik Modern - Cluster Emerald"
-                : portfolioItem.id === "api-portfolio"
-                  ? `Portofolio ${portfolioItem.title}`
-                  : "Renovasi Interior Dapur Modern"}
+            {`Portofolio ${portfolioItem.title}`}
           </h1>
 
           <div className="space-y-1 text-[1.125rem] leading-9 md:text-[2rem] md:leading-[3.125rem]">
             <p>Lokasi: {portfolioItem.location}.</p>
             <p>Status: {portfolioItem.status}.</p>
             <p>Durasi: {portfolioItem.duration}.</p>
-            <p>
-              {portfolioItem.id === "porto-3" ? "Luas Area" : "Luas Bangunan"}:{" "}
-              {portfolioItem.area}.
-            </p>
+            <p>Luas Bangunan: {portfolioItem.area}.</p>
           </div>
 
           <p className="text-[1.2rem] leading-10 text-white/95 md:text-[2rem] md:leading-[3.125rem]">

@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "@/lib/api-config";
 import { requestJson, type ApiResponse } from "@/lib/auth-fetch";
 
-export type ProposalStatus =
+type ProposalStatus =
   | "MENUNGGU PERSETUJUAN"
   | "DISETUJUI"
   | "DITOLAK"
@@ -91,14 +91,14 @@ type ProposalPaymentResponse = ApiResponse<{
   };
 }>;
 
-export type ProposalPayResult = {
+type ProposalPayResult = {
   paymentUrl: string | null;
   orderId: string | null;
   status: ProposalStatus | null;
   proposal: Proposal | null;
 };
 
-export type CreateProposalInput = {
+type CreateProposalInput = {
   budget: number;
   deadline: string;
   field: string;
@@ -112,8 +112,8 @@ export type CreateProposalInput = {
   foremanId?: number;
 };
 
-export type UpdateProposalInput = Partial<CreateProposalInput>;
-export type UpdateProposalPayload = UpdateProposalInput & {
+type UpdateProposalInput = Partial<CreateProposalInput>;
+type UpdateProposalPayload = UpdateProposalInput & {
   status?: ProposalStatus;
 };
 
@@ -306,7 +306,7 @@ export async function createProposal(
   return proposal;
 }
 
-export async function updateProposal(
+async function updateProposal(
   id: string,
   input: UpdateProposalPayload,
 ): Promise<Proposal> {
@@ -393,10 +393,4 @@ export async function payProposal(id: string): Promise<ProposalPayResult> {
     status,
     proposal: null,
   };
-}
-
-export async function approveProposalByClient(
-  id: string,
-): Promise<ProposalPayResult> {
-  return payProposal(id);
 }

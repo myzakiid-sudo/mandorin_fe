@@ -1,4 +1,4 @@
-export type ContractorSummary = {
+export type MandorSummary = {
   id: string;
   name: string;
   image: string;
@@ -11,7 +11,7 @@ export type ContractorSummary = {
   isReady: boolean;
 };
 
-export type PortfolioItem = {
+type PortfolioItem = {
   id: string;
   title: string;
   description: string;
@@ -24,7 +24,7 @@ export type PortfolioItem = {
   details: string;
 };
 
-export type TestimonialItem = {
+type TestimonialItem = {
   id: string;
   quote: string;
   name: string;
@@ -32,7 +32,7 @@ export type TestimonialItem = {
   avatar: string;
 };
 
-export type ContractorDetail = {
+export type MandorDetail = {
   name: string;
   shortBio: string;
   longBio: string[];

@@ -1,6 +1,5 @@
-import ContractorDetailContent from "@/components/features/mandor/contractor-detail-content";
-import { mapForemanToContractorDetail } from "@/components/features/mandor/foreman-mapper";
-import { contractorById } from "@/components/features/mandor/data";
+import MandorDetailContent from "@/components/features/mandor/mandor-detail-content";
+import { mapForemanToMandorDetail } from "@/components/features/mandor/foreman-mapper";
 import DetailNotFound from "@/components/features/mandor/detail-not-found";
 import { getForemanById } from "@/lib/foreman-api";
 
@@ -11,13 +10,12 @@ export default async function MandorDetailPage({
 }) {
   const { id } = await params;
   const foreman = await getForemanById(id);
-  const contractor = foreman
-    ? mapForemanToContractorDetail(foreman)
-    : contractorById[id];
 
-  if (!contractor) {
+  if (!foreman) {
     return <DetailNotFound />;
   }
 
-  return <ContractorDetailContent contractorId={id} contractor={contractor} />;
+  const mandor = mapForemanToMandorDetail(foreman);
+
+  return <MandorDetailContent mandorId={id} mandor={mandor} />;
 }

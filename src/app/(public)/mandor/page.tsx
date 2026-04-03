@@ -1,5 +1,5 @@
-import ContractorListSection from "@/components/features/mandor/contractor-list-section";
-import { mapForemanToContractorSummary } from "@/components/features/mandor/foreman-mapper";
+import MandorListSection from "@/components/features/mandor/mandor-list-section";
+import { mapForemanToMandorSummary } from "@/components/features/mandor/foreman-mapper";
 import { getForemanList } from "@/lib/foreman-api";
 
 export default async function MandorPage({
@@ -10,12 +10,9 @@ export default async function MandorPage({
   const { name = "" } = await searchParams;
   const normalizedName = typeof name === "string" ? name.trim() : "";
   const foremanList = await getForemanList(normalizedName);
-  const contractors = foremanList.map(mapForemanToContractorSummary);
+  const mandors = foremanList.map(mapForemanToMandorSummary);
 
   return (
-    <ContractorListSection
-      contractors={contractors}
-      currentSearchName={normalizedName}
-    />
+    <MandorListSection mandors={mandors} currentSearchName={normalizedName} />
   );
 }

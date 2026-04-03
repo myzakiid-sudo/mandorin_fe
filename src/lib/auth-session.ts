@@ -1,4 +1,4 @@
-export type UserRole = "client" | "mandor";
+type UserRole = "client" | "mandor";
 
 export type AuthSession = {
   token: string;

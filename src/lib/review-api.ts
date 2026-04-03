@@ -22,7 +22,7 @@ type ReviewListResponse = ApiResponse<Review[]> & {
 
 type ReviewDetailResponse = ApiResponse<Review>;
 
-export type CreateReviewInput = {
+type CreateReviewInput = {
   content: string;
   client_id: number;
   foreman_id: number;

@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "@/lib/api-config";
 import { requestJson, type ApiResponse } from "@/lib/auth-fetch";
 
-export type AppointmentStatus =
+type AppointmentStatus =
   | "MENUNGGU PERSUTUJUAN"
   | "MENUNGGU PERSETUJUAN"
   | "DISETUJUI"

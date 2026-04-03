@@ -1,15 +1,15 @@
 import Image from "next/image";
 
-import type { ContractorDetail } from "./types";
+import type { MandorDetail } from "./types";
 
-type ContractorDetailTestimonialsProps = {
-  contractor: ContractorDetail;
+type MandorDetailTestimonialsProps = {
+  mandor: MandorDetail;
 };
 
-export default function ContractorDetailTestimonials({
-  contractor,
-}: ContractorDetailTestimonialsProps) {
-  if (!contractor.testimonials.length) {
+export default function MandorDetailTestimonials({
+  mandor,
+}: MandorDetailTestimonialsProps) {
+  if (!mandor.testimonials.length) {
     return (
       <section className="bg-[#ececf3]">
         <div className="mx-auto w-full max-w-[90rem] px-5 py-12 md:px-10 md:py-16 xl:px-[6.25rem]">
@@ -35,7 +35,7 @@ export default function ContractorDetailTestimonials({
         </h2>
 
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {contractor.testimonials.map((testimonial) => (
+          {mandor.testimonials.map((testimonial) => (
             <article key={testimonial.id} className="text-center">
               <div className="rounded-[1.25rem] bg-white px-5 py-6 shadow-[0_0.5rem_1.5rem_rgba(0,0,0,0.06)]">
                 <p className="text-sm leading-7 text-[var(--text-black)] md:text-base">

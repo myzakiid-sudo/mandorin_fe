@@ -68,7 +68,7 @@ export async function getForemanById(
   return payload.data;
 }
 
-export type ForemanProfileShape = {
+type ForemanProfileShape = {
   name?: unknown;
   birth_place?: unknown;
   birth_date?: unknown;
@@ -165,7 +165,7 @@ const toDateInputValue = (rawValue: string) => {
   return parsed.toISOString().split("T")[0];
 };
 
-export const mapApiToMandorForm = (
+const mapApiToMandorForm = (
   payload: ForemanProfileShape,
 ): MandorProfileForm => {
   const root = asRecord(payload);

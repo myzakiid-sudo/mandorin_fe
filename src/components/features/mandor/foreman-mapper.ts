@@ -1,6 +1,6 @@
 import type { ForemanProfile } from "@/lib/foreman-api";
 
-import type { ContractorDetail, ContractorSummary } from "./types";
+import type { MandorDetail, MandorSummary } from "./types";
 
 const FALLBACK_IMAGE = "/images/mandor/mandor-rio%20prasetyaa.png";
 
@@ -10,9 +10,9 @@ const resolveTier = (experience: number): "Gold" | "Silver" | "Bronze" => {
   return "Bronze";
 };
 
-export const mapForemanToContractorSummary = (
+export const mapForemanToMandorSummary = (
   item: ForemanProfile,
-): ContractorSummary => {
+): MandorSummary => {
   const experienceYears = Number(item.experience) || 0;
 
   return {
@@ -29,9 +29,9 @@ export const mapForemanToContractorSummary = (
   };
 };
 
-export const mapForemanToContractorDetail = (
+export const mapForemanToMandorDetail = (
   item: ForemanProfile,
-): ContractorDetail => {
+): MandorDetail => {
   const experienceYears = Number(item.experience) || 0;
   const firstParagraph =
     item.bio?.trim() ||

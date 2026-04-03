@@ -1,9 +1,7 @@
 import { API_BASE_URL } from "@/lib/api-config";
 import { requestJson, type ApiResponse } from "@/lib/auth-fetch";
-import { getClientDisplayByUserId } from "@/lib/client-api";
-import { getForemanById } from "@/lib/foreman-api";
 
-export type ProjectStatus = "SEDANG BERJALAN" | "SELESAI" | "DITUNDA" | string;
+type ProjectStatus = "SEDANG BERJALAN" | "SELESAI" | "DITUNDA" | string;
 
 export type ProjectMilestone = {
   id: number;
@@ -80,17 +78,7 @@ type AddProjectMilestoneResponse = ApiResponse<{ count?: number }>;
 type ProjectReportListResponse = ApiResponse<ProjectReport[]>;
 type ProjectReportDetailResponse = ApiResponse<ProjectReport>;
 
-export type CreateProjectInput = {
-  field: string;
-  title: string;
-  content: string;
-  budget: number;
-  deadline: string;
-  location: string;
-  status?: ProjectStatus;
-};
-
-export type CreateProjectMilestoneInput = {
+type CreateProjectMilestoneInput = {
   title: string;
   content: string;
   deadline: string;
@@ -99,7 +87,7 @@ export type CreateProjectMilestoneInput = {
   completed?: boolean;
 };
 
-export type CreateProjectReportInput = {
+type CreateProjectReportInput = {
   title: string;
   content: string;
   photo?: string;
@@ -129,173 +117,6 @@ const isEmptyProjectDataMessage = (message?: string) =>
 const isAuthFailure = (status: number, message?: string) =>
   status === 401 || isAccessTokenInvalidMessage(message);
 
-const isPlaceholderRoleName = (name: string, role: "Klien" | "Mandor") => {
-  if (role === "Klien") {
-    return /^klien(?:\s*#?\s*\d+)?$/i.test(name);
-  }
-
-  return /^mandor(?:\s*#?\s*\d+)?$/i.test(name);
-};
-
-const getResolvedPersonName = (
-  name: string | undefined,
-  role: "Klien" | "Mandor",
-) => {
-  const normalized = name?.trim() ?? "";
-
-  if (!normalized || isPlaceholderRoleName(normalized, role)) {
-    return null;
-  }
-
-  return normalized;
-};
-
-const applyResolvedNames = (
-  project: Project,
-  resolved: {
-    clientName?: string | null;
-    foremanName?: string | null;
-  },
-): Project => {
-  let nextProject = project;
-
-  if (resolved.clientName) {
-    nextProject = {
-      ...nextProject,
-      clients: {
-        ...(nextProject.clients ?? {}),
-        name: resolved.clientName,
-      },
-    };
-  }
-
-  if (resolved.foremanName) {
-    nextProject = {
-      ...nextProject,
-      foreman: {
-        ...(nextProject.foreman ?? {}),
-        name: resolved.foremanName,
-      },
-    };
-  }
-
-  return nextProject;
-};
-
-const getIdsToResolve = (
-  projects: Project[],
-  getId: (project: Project) => number,
-  needsResolve: (project: Project) => boolean,
-) => {
-  const uniqueIds = new Set<number>();
-
-  projects.forEach((project) => {
-    if (!needsResolve(project)) {
-      return;
-    }
-
-    const id = getId(project);
-
-    if (Number.isFinite(id) && id > 0) {
-      uniqueIds.add(id);
-    }
-  });
-
-  return [...uniqueIds];
-};
-
-const resolveClientNames = async (projects: Project[]) => {
-  const clientIds = getIdsToResolve(
-    projects,
-    (project) => project.client_id,
-    (project) => !getResolvedPersonName(project.clients?.name, "Klien"),
-  );
-
-  if (!clientIds.length) {
-    return new Map<number, string>();
-  }
-
-  const entries = await Promise.all(
-    clientIds.map(async (clientId) => {
-      const client = await getClientDisplayByUserId(String(clientId));
-      const resolvedName = getResolvedPersonName(client?.name, "Klien");
-
-      if (!resolvedName) {
-        return null;
-      }
-
-      return [clientId, resolvedName] as const;
-    }),
-  );
-
-  return new Map(
-    entries.filter(
-      (entry): entry is readonly [number, string] => entry !== null,
-    ),
-  );
-};
-
-const resolveForemanNames = async (projects: Project[]) => {
-  const foremanIds = getIdsToResolve(
-    projects,
-    (project) => project.foreman_id,
-    (project) => !getResolvedPersonName(project.foreman?.name, "Mandor"),
-  );
-
-  if (!foremanIds.length) {
-    return new Map<number, string>();
-  }
-
-  const entries = await Promise.all(
-    foremanIds.map(async (foremanId) => {
-      const foreman = await getForemanById(String(foremanId));
-      const resolvedName = getResolvedPersonName(foreman?.name, "Mandor");
-
-      if (!resolvedName) {
-        return null;
-      }
-
-      return [foremanId, resolvedName] as const;
-    }),
-  );
-
-  return new Map(
-    entries.filter(
-      (entry): entry is readonly [number, string] => entry !== null,
-    ),
-  );
-};
-
-const enrichProjectsWithRealNames = async (projects: Project[]) => {
-  const [clientNames, foremanNames] = await Promise.all([
-    resolveClientNames(projects),
-    resolveForemanNames(projects),
-  ]);
-
-  return projects.map((project) =>
-    applyResolvedNames(project, {
-      clientName: clientNames.get(project.client_id),
-      foremanName: foremanNames.get(project.foreman_id),
-    }),
-  );
-};
-
-const enrichProjectWithRealNames = async (project: Project) => {
-  const [client, foreman] = await Promise.all([
-    getResolvedPersonName(project.clients?.name, "Klien")
-      ? Promise.resolve(null)
-      : getClientDisplayByUserId(String(project.client_id)),
-    getResolvedPersonName(project.foreman?.name, "Mandor")
-      ? Promise.resolve(null)
-      : getForemanById(String(project.foreman_id)),
-  ]);
-
-  return applyResolvedNames(project, {
-    clientName: getResolvedPersonName(client?.name, "Klien"),
-    foremanName: getResolvedPersonName(foreman?.name, "Mandor"),
-  });
-};
-
 export async function getProjects(userId?: string): Promise<Project[]> {
   const query = userId?.trim() ? `?userId=${encodeURIComponent(userId)}` : "";
 
@@ -311,7 +132,7 @@ export async function getProjects(userId?: string): Promise<Project[]> {
   );
 
   if (Array.isArray(payload?.data)) {
-    return enrichProjectsWithRealNames(payload.data);
+    return payload.data;
   }
 
   if (isAuthFailure(response.status, payload?.message)) {
@@ -343,33 +164,6 @@ export async function getProjectById(id: string): Promise<Project> {
 
   if (!response.ok || payload?.success !== true || !payload.data) {
     throw new Error(payload?.message || "Data proyek tidak ditemukan.");
-  }
-
-  return enrichProjectWithRealNames(payload.data);
-}
-
-export async function createProject(
-  input: CreateProjectInput,
-): Promise<Project> {
-  const { response, payload } = await requestJson<ProjectDetailResponse>(
-    `${API_BASE_URL}/projects`,
-    {
-      auth: true,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(input),
-    },
-  );
-
-  if (isAuthFailure(response.status, payload?.message)) {
-    throw new ProjectAuthError(payload?.message);
-  }
-
-  if (!response.ok || payload?.success !== true || !payload.data) {
-    throw new Error(payload?.message || "Gagal membuat proyek.");
   }
 
   return payload.data;

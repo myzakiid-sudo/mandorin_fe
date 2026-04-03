@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import type { ContractorSummary } from "./types";
+import type { MandorSummary } from "./types";
 
 const tierClassName: Record<"Gold" | "Silver" | "Bronze", string> = {
   Gold: "bg-[#b48a1f] text-white",
@@ -12,19 +12,19 @@ const tierClassName: Record<"Gold" | "Silver" | "Bronze", string> = {
   Bronze: "bg-[#a7673d] text-white",
 };
 
-type ContractorListSectionProps = {
-  contractors: ContractorSummary[];
+type MandorListSectionProps = {
+  mandors: MandorSummary[];
   currentSearchName?: string;
 };
 
-export default function ContractorListSection({
-  contractors,
+export default function MandorListSection({
+  mandors,
   currentSearchName = "",
-}: ContractorListSectionProps) {
+}: MandorListSectionProps) {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
   const heroProfiles = useMemo(() => {
-    if (!contractors.length) {
+    if (!mandors.length) {
       return [
         {
           id: "fallback",
@@ -35,15 +35,15 @@ export default function ContractorListSection({
       ];
     }
 
-    return contractors.slice(0, 6).map((contractor) => ({
-      id: contractor.id,
-      years: contractor.experienceYears
-        ? `${contractor.experienceYears}+`
+    return mandors.slice(0, 6).map((mandor) => ({
+      id: mandor.id,
+      years: mandor.experienceYears
+        ? `${mandor.experienceYears}+`
         : "5+",
-      name: contractor.name,
-      image: contractor.image,
+      name: mandor.name,
+      image: mandor.image,
     }));
-  }, [contractors]);
+  }, [mandors]);
 
   useEffect(() => {
     if (heroProfiles.length < 2) return;
@@ -204,29 +204,29 @@ export default function ContractorListSection({
         </header>
 
         <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {contractors.map((contractor) => (
+          {mandors.map((mandor) => (
             <article
-              key={contractor.id}
+              key={mandor.id}
               className="group relative overflow-hidden rounded-[1.25rem] border border-[#f0af5f] bg-white p-3"
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="rounded-full border border-[var(--orange-normal)] bg-white px-3 py-1 text-[0.75rem] font-medium leading-none text-[var(--orange-normal)]">
-                  {contractor.experienceYears
-                    ? `${contractor.experienceYears} Tahun`
-                    : `${contractor.projectCount} Proyek`}
+                  {mandor.experienceYears
+                    ? `${mandor.experienceYears} Tahun`
+                    : `${mandor.projectCount} Proyek`}
                 </span>
                 <span
-                  className={`rounded-full px-3 py-1 text-[0.75rem] font-medium leading-none ${tierClassName[contractor.tier]}`}
+                  className={`rounded-full px-3 py-1 text-[0.75rem] font-medium leading-none ${tierClassName[mandor.tier]}`}
                 >
-                  {contractor.tier}
+                  {mandor.tier}
                 </span>
               </div>
 
               <div className="relative h-[16rem] w-full overflow-hidden rounded-xl bg-white md:h-[17rem]">
                 <div className="relative h-full w-full">
                   <Image
-                    src={contractor.image}
-                    alt={contractor.name}
+                    src={mandor.image}
+                    alt={mandor.name}
                     fill
                     className="object-contain object-bottom transition-transform duration-300 group-hover:scale-[1.03]"
                     sizes="(max-width: 768px) 100vw, 30vw"
@@ -236,8 +236,8 @@ export default function ContractorListSection({
 
               <div className="mt-3 flex items-center gap-3 rounded-[1rem] bg-white px-3 py-2">
                 <Image
-                  src={contractor.image}
-                  alt={`${contractor.name} avatar`}
+                  src={mandor.image}
+                  alt={`${mandor.name} avatar`}
                   width={36}
                   height={36}
                   className="h-9 w-9 rounded-full bg-white object-cover"
@@ -245,17 +245,17 @@ export default function ContractorListSection({
 
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-[1rem] font-semibold leading-tight text-[var(--text-black)]">
-                    {contractor.name}
+                    {mandor.name}
                   </h3>
                   <p className="truncate text-[0.8rem] leading-tight text-[var(--text-secondary)]">
-                    {contractor.specialty}
+                    {mandor.specialty}
                   </p>
                 </div>
 
-                {contractor.isReady ? (
+                {mandor.isReady ? (
                   <Link
-                    href={`/mandor/${contractor.id}`}
-                    aria-label={`Lihat detail ${contractor.name}`}
+                    href={`/mandor/${mandor.id}`}
+                    aria-label={`Lihat detail ${mandor.name}`}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[1rem] font-bold text-[var(--text-black)] transition-colors hover:bg-[var(--orange-light)]"
                   >
                     <Image
@@ -269,7 +269,7 @@ export default function ContractorListSection({
                   <button
                     type="button"
                     disabled
-                    aria-label={`Detail ${contractor.name} belum tersedia`}
+                    aria-label={`Detail ${mandor.name} belum tersedia`}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--white-normal)] text-[1rem] text-[var(--text-secondary)]"
                   >
                     <Image
@@ -285,7 +285,7 @@ export default function ContractorListSection({
             </article>
           ))}
 
-          {!contractors.length ? (
+          {!mandors.length ? (
             <article className="rounded-[1.25rem] border border-[var(--black-light)] bg-white p-5 text-center md:col-span-2 xl:col-span-3">
               <p className="text-sm text-[var(--text-secondary)]">
                 Data mandor belum tersedia saat ini.

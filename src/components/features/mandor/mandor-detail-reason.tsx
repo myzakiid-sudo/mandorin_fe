@@ -3,22 +3,22 @@
 import { type FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { ContractorDetail, ViewerRole } from "./types";
+import type { MandorDetail, ViewerRole } from "./types";
 import Link from "next/link";
 import { AppointmentAuthError, createAppointment } from "@/lib/appointment-api";
 import { useAuth } from "@/context/auth-context";
 
-type ContractorDetailReasonProps = {
-  contractorId: string;
-  contractor: ContractorDetail;
+type MandorDetailReasonProps = {
+  mandorId: string;
+  mandor: MandorDetail;
   viewerRole: ViewerRole;
 };
 
-export default function ContractorDetailReason({
-  contractorId,
-  contractor,
+export default function MandorDetailReason({
+  mandorId,
+  mandor,
   viewerRole,
-}: ContractorDetailReasonProps) {
+}: MandorDetailReasonProps) {
   const router = useRouter();
   const { authSession, clearSession, isReady } = useAuth();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -26,7 +26,7 @@ export default function ContractorDetailReason({
   const [submitError, setSubmitError] = useState("");
 
   const bookingSectionRef = useRef<HTMLElement | null>(null);
-  const parsedForemanId = Number(contractorId);
+  const parsedForemanId = Number(mandorId);
   const hasValidForemanId = Number.isFinite(parsedForemanId);
 
   const handleOpenBooking = () => {
@@ -109,10 +109,10 @@ export default function ContractorDetailReason({
       <section className="mx-auto w-full max-w-[90rem] px-5 py-12 md:px-10 md:py-16 xl:px-[6.25rem]">
         <div className="rounded-[1.5rem] bg-transparent py-2">
           <h2 className="text-[2.25rem] font-semibold leading-tight text-[var(--text-black)] md:text-[3rem]">
-            Mengapa Pilih {contractor.name}?
+            Mengapa Pilih {mandor.name}?
           </h2>
           <p className="mt-5 max-w-[70rem] text-base leading-8 text-[var(--text-secondary)] md:text-lg">
-            {contractor.reason}
+            {mandor.reason}
           </p>
 
           {viewerRole === "client" ? (

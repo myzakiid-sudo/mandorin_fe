@@ -1,22 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import type { ContractorDetail } from "./types";
+import type { MandorDetail } from "./types";
 
-type ContractorDetailPortfolioProps = {
-  contractorId: string;
-  contractor: ContractorDetail;
+type MandorDetailPortfolioProps = {
+  mandorId: string;
+  mandor: MandorDetail;
 };
 
-export default function ContractorDetailPortfolio({
-  contractorId,
-  contractor,
-}: ContractorDetailPortfolioProps) {
-  if (!contractor.portfolio.length) {
+export default function MandorDetailPortfolio({
+  mandorId,
+  mandor,
+}: MandorDetailPortfolioProps) {
+  if (!mandor.portfolio.length) {
     return (
       <section className="mx-auto w-full max-w-[90rem] px-5 pb-12 pt-16 md:px-10 md:pb-16 md:pt-24 xl:px-[6.25rem]">
         <h2 className="text-center text-3xl font-semibold leading-tight text-[var(--text-black)] md:text-4xl">
-          Rekam Jejak & Portofolio {contractor.name}
+          Rekam Jejak & Portofolio {mandor.name}
         </h2>
 
         <div className="mt-8 rounded-[1.25rem] border border-[var(--black-light)] bg-white px-5 py-6 text-center">
@@ -31,14 +31,14 @@ export default function ContractorDetailPortfolio({
   return (
     <section className="mx-auto w-full max-w-[90rem] px-5 pb-12 pt-16 md:px-10 md:pb-16 md:pt-24 xl:px-[6.25rem]">
       <h2 className="text-center text-3xl font-semibold leading-tight text-[var(--text-black)] md:text-4xl">
-        Rekam Jejak & Portofolio {contractor.name}
+        Rekam Jejak & Portofolio {mandor.name}
       </h2>
 
       <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-        {contractor.portfolio.map((item) => (
+        {mandor.portfolio.map((item) => (
           <Link
             key={item.id}
-            href={`/mandor/${contractorId}/portfolio/${item.id}`}
+            href={`/mandor/${mandorId}/portfolio/${item.id}`}
             aria-label={`Lihat detail proyek ${item.title}`}
             className="group relative overflow-hidden rounded-[1.25rem] bg-black"
           >
